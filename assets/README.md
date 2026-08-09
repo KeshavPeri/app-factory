@@ -16,7 +16,9 @@ revised from evidence in Phase 8. Every file in this folder carries a
 3. **`design-reference.md`** — 3–5 references, each with one line on what specifically to take
    from it. Rough on purpose; distinctive is Phase 8's job.
 4. **`agents/`** — the Analyst, Builder and QA subagent definitions, plus the orchestrator
-   routine prompt (`orchestrator-prompt.md`).
+   routine prompt (`orchestrator-prompt.md`). Hardened to v0.2 in Phase 4 and committed to
+   `fpl-advisor`; the copies here are byte-identical mirrors of what runs. `escalation.md`
+   (the single canonical copy of the §4.5 tiers, extracted at task 4.6) sits alongside them.
 
 ## Reference
 
