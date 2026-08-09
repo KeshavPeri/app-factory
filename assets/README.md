@@ -1,3 +1,5 @@
+v0.1 — provisional, revised at Phase 8
+
 # App Factory — v0.1 assets
 
 Provisional assets for the Analyst/Builder/QA pipeline. Drafted in Phase 2, explicitly rough,
