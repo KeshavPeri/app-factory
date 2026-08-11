@@ -323,6 +323,15 @@ merge. A blocked ticket's decisions go in the issue comment instead.
 log during the shakedown and nothing downstream noticed — the build passed, QA passed, the PR
 looked clean.
 
+**RLS and GRANTs are two separate gates in Supabase, and a schema ticket must close both.**
+Enabling Row Level Security with a policy is not a complete permissions spec. Without a `GRANT`
+the table is unreachable no matter what the policy says, and the service-role key bypasses RLS
+but *not* grants. `permission denied for table X` means a missing grant; `new row violates
+row-level security policy` means a missing policy. Worse, this is invisible to a
+"migration applies cleanly against local Postgres" definition of done, because that test runs as
+a superuser. Every table-creating ticket needs an explicit grants line in its DoD. See
+`deltas.md` D8.
+
 **Vercel deployment protection must be off for previews.** Otherwise the preview link is a login
 wall, which breaks phone review and stops QA testing the deployed build.
 

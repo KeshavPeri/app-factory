@@ -235,3 +235,44 @@ recurs for any file two tickets in one batch both append to. Wave C (#11 and #12
 to `.github/workflows/scheduled-jobs.yml` and will collide the same way. Ticket #12 now carries an
 explicit DoD item requiring both steps to survive the merge. **When scoping a batch, check whether
 the two tickets append to the same file** — not just whether they depend on each other.
+
+
+---
+
+# D8 — Supabase RLS and GRANTs are two gates, and the schema tickets only closed one
+
+Observed 11 Aug 2026, first `workflow_dispatch` run of the fpl-advisor heartbeat:
+
+```
+heartbeat: insert into job_runs failed: permission denied for table job_runs
+```
+
+Both schema migrations (#9 reference tables, #10 `job_runs`) created tables, enabled Row Level
+Security and added a `SELECT` policy for `anon` — and issued **no `GRANT` at all**. The tickets
+asked for RLS and got RLS; nobody asked for grants.
+
+**The distinction.** A query must pass both gates. GRANTs decide whether a role may touch the
+table at all; RLS decides which rows once it is inside. The secret key's `service_role`
+**bypasses RLS but not GRANTs**, so it was refused at the outer gate while the policy sat there
+looking correct.
+
+Read the error text to tell them apart:
+
+| Message | Gate that closed |
+|---|---|
+| `permission denied for table X` | missing **GRANT** |
+| `new row violates row-level security policy` | missing or wrong **POLICY** |
+
+**Why the tickets missed it.** "Enable RLS with a read-only policy for anon" reads like a
+complete permissions specification and isn't. Neither the Analyst lint nor QA caught it, because
+both migrations applied cleanly against local Postgres — where the test ran as a superuser, for
+whom grants are irrelevant. **The local-Postgres DoD is blind to this entire class of bug.**
+
+**Fixed** by a follow-up migration granting `SELECT` to `anon` and `SELECT, INSERT, UPDATE` to
+`service_role`, plus `ALTER DEFAULT PRIVILEGES` for future tables. `DELETE` deliberately
+withheld, so "no deletion of existing rows" becomes a database guarantee rather than a promise
+in a ticket.
+
+**Carry-forward for every new app.** Any ticket that creates a Supabase table must require
+`GRANT`s in the same migration file, as a definition-of-done item, not as an assumption. Added
+to `assets/new-app-kickoff.md` Part 3.
