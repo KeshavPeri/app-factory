@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css"></head>
+<body>
+
+<div class="cover">
+  <div class="rule"></div>
+  <div class="eyebrow">Operating guide &middot; v1</div>
+  <h1>Running the<br>App&nbsp;Factory</h1>
+  <div class="sub">Every step, in order — the weekly rhythm you'll actually live in, and the full sequence for taking a brand-new app from an empty repository to something running on your phone.</div>
+  <div class="meta">
+    <strong>For</strong> Keshav &nbsp;·&nbsp; <strong>Written</strong> 10 August 2026, after the first end-to-end run<br>
+    Keep this open the first few times. After that you'll only need the last two pages.
+  </div>
+</div>
+
+<h2>How to use this guide</h2>
+
+<p class="lead">There are two things you do with this system, and they have very different shapes.</p>
+
+<p><strong>Part One is the rhythm</strong> — writing a ticket, queueing it, reviewing what came back. You'll do this hundreds of times. It should take five minutes in the evening and ten in the morning. If it starts taking longer, something has gone wrong and Part Three will tell you what.</p>
+
+<p><strong>Part Two is starting a new app.</strong> You'll do this maybe three times a year. It's long, it's mostly one-time setup, and it's worth following literally rather than from memory.</p>
+
+<div class="box tip">
+<span class="label">The one habit that matters</span>
+<p style="margin-bottom:0">Everything else in this guide is mechanics. The thing that determines whether this system works for you is <strong>the quality of the tickets you write</strong>. Agent capability is not the limiting factor. A vague ticket produces a confident, wrong answer at 3am, and you find out at 8am. A precise ticket produces something you merge in ninety seconds.</p>
+</div>
+
+<h2>Part One &middot; The weekly rhythm</h2>
+
+<h3>What's already running</h3>
+
+<table>
+<tr><td style="width:34%">The routine</td><td><span class="mono">FPL Advisor overnight pipeline</span>, fires daily at 2:00 AM Singapore time</td></tr>
+<tr><td>Model</td><td>Sonnet 5, for quota reasons</td></tr>
+<tr><td>Batch limit</td><td>2 tickets per run</td></tr>
+<tr><td>Revision cap</td><td>2 attempts before a ticket is blocked for you</td></tr>
+<tr><td>Dashboard</td><td><span class="mono">claude.ai/code/routines</span></td></tr>
+</table>
+
+<p>An empty night is nearly free — if nothing is queued, the run posts "nothing queued" and stops before loading anything. So a daily schedule does not mean daily cost. <strong>What you queue is what you spend.</strong></p>
+
+<h3 class="pagebreak">Evening &middot; queueing work</h3>
+
+<div class="step">
+<div class="n">1</div>
+<h4>Write the ticket as a GitHub issue</h4>
+<p>Go to your repo &#8594; <strong>Issues</strong> &#8594; <strong>New issue</strong> &#8594; pick the <strong>Ticket</strong> template. It gives you four sections. Fill in all of them; a placeholder left in place is what bounces a ticket back while you're asleep.</p>
+<p><strong>Title format:</strong> <span class="mono">&lt;verb&gt; &lt;thing&gt; — &lt;one clause on why&gt;</span></p>
+<p>The four sections, and what each is really for:</p>
+<ul>
+<li><strong>Context</strong> — which part of the product brief this serves. One or two sentences.</li>
+<li><strong>Scope</strong> — what's in, and crucially <em>what's explicitly out</em>. The out-of-scope line is what stops a Builder wandering into territory you didn't intend. "Does not add any new stored data" is a good one.</li>
+<li><strong>Definition of done</strong> — a checklist that Builder and QA can both point at and agree is objectively met. Not "looks good."</li>
+<li><strong>Notes</strong> — anything ambiguous that you already know the answer to. Better written here than escalated at 3am.</li>
+</ul>
+</div>
+
+<div class="box warn">
+<span class="label">Check the premise before you write</span>
+<p style="margin-bottom:0">Take thirty seconds to confirm the thing you're asking for isn't already done, and that anything it depends on actually exists. Both of the first test tickets failed this — one asked for work already in the codebase, the other assumed a screen that had never been built. The system caught both, but each burned a cycle.</p>
+</div>
+
+<div class="step">
+<div class="n">2</div>
+<h4>Lint it — this is the highest-value five minutes in the whole system</h4>
+<p>In Terminal:</p>
+<pre><code>cd ~/Projects/fpl-advisor
+claude</code></pre>
+<p>Then paste, replacing <span class="mono">N</span> with your issue number:</p>
+<pre><code>Fetch issue #N with `gh issue view N`, then dispatch the analyst
+subagent with the full ticket text. Wait for it; do not background
+it. Report the verdict, the Tier-1 scope check, and the DoD
+verifiability note.</code></pre>
+<p>You get back three things:</p>
+<ul>
+<li><strong>A verdict</strong> — PASS, or NEEDS EDIT with each problem named.</li>
+<li><strong>A Tier-1 scope check</strong> — not just whether the ticket <em>asks</em> something risky, but whether building it <em>as described</em> would force a Tier 1 decision by default.</li>
+<li><strong>A verifiability note</strong> — which criteria QA won't be able to check without a real device, so you know in advance what lands in the "not tested" list.</li>
+</ul>
+<p>Fix what it flags. The whole point is that you're awake right now and won't be at 3am.</p>
+</div>
+
+<div class="step">
+<div class="n">3</div>
+<h4>Queue it</h4>
+<p>Add the label <span class="mono">status:ready</span> to the issue. That's it — that label is the only thing that puts work into the pipeline.</p>
+<p><strong>Order is ascending issue number.</strong> Lowest open number gets picked first. There's no priority field, so file tickets in the order you want them built. Only two get picked per run, so queueing five doesn't get five built.</p>
+</div>
+
+<h3>Morning &middot; the ten-minute review</h3>
+
+<div class="step">
+<div class="n">1</div>
+<h4>Open the pull request</h4>
+<p>You'll have a GitHub notification. The PR description is written for exactly this moment.</p>
+</div>
+
+<div class="step">
+<div class="n">2</div>
+<h4>Tap the preview link on the first line, and use the app</h4>
+<p>This is the actual review. Not the diff — the running app. Poke the thing the ticket was about.</p>
+</div>
+
+<div class="step">
+<div class="n">3</div>
+<h4>Read the paragraph, then two specific parts</h4>
+<p>Read "what changed." Then read <strong>high-impact decisions</strong> — each should say <em>because</em>, and that's where you catch a misread brief in three seconds. Then read <strong>what was not tested</strong>, which tells you what to check yourself.</p>
+</div>
+
+<div class="step">
+<div class="n">4</div>
+<h4>Merge, or write one sentence</h4>
+<p>To merge: <strong>Ready for review</strong> &#8594; <strong>Merge pull request</strong> &#8594; <strong>Confirm</strong>. Then <strong>Delete branch</strong>. The issue closes itself.</p>
+<p>If something's wrong, comment on the issue saying what, add <span class="mono">status:ready</span> back, and it gets picked up next run. Don't fix it by hand — that hides a problem the system should have caught.</p>
+</div>
+
+<div class="box stop">
+<span class="label">The tell that this has stopped working</span>
+<p style="margin-bottom:0">If you can't answer <em>"what did I merge yesterday?"</em>, you've started rubber-stamping. That's the realistic failure of this whole system — not a dramatic bad merge, but a slow slide into approving without looking. If you notice it, queue fewer tickets rather than reviewing faster.</p>
+</div>
+
+<h3 class="pagebreak">When a ticket comes back blocked</h3>
+
+<p>A blocked issue carries the <span class="mono">status:blocked</span> label and — more importantly — <strong>a comment with a single question</strong>. You get a notification for the comment. That question is written to be answerable from a phone with no other context.</p>
+
+<p>Three things cause a block:</p>
+
+<table>
+<tr><th style="width:30%">Cause</th><th>What you do</th></tr>
+<tr><td><strong>Tier 1 hit</strong></td><td>Something needs an account, a credential, real money, or would store personal data. Only you can do it. Do the thing yourself, or change the ticket to avoid needing it, then re-label <span class="mono">status:ready</span>.</td></tr>
+<tr><td><strong>Revision cap</strong></td><td>QA failed the work twice. Read the comment for what kept failing. Usually the ticket was ambiguous — rewrite it rather than asking again.</td></tr>
+<tr><td><strong>Died mid-run</strong></td><td>A previous run stopped partway and left a branch with work on it. You'll be asked: resume, restart, or discard. "Discard" is nearly always right — delete the branch and re-queue.</td></tr>
+</table>
+
+<p>Answer by commenting on the issue. Then either re-label it <span class="mono">status:ready</span> or close it.</p>
+
+<h3>Polish tickets</h3>
+
+<p>Normal build tickets deliberately run on the baseline design skill plus the reference file only. The heavy design tooling — Impeccable, the motion skills — is confined to tickets explicitly typed "polish", because those skills load large reference files into context on every pass and that's a tax you'd otherwise pay on every ticket.</p>
+
+<p>So: batch up visual work and run it as its own ticket at a feature milestone. Write "This is a polish ticket" in the Context, and name the surface — "the fixtures screen", not "the app".</p>
+
+<h2 class="pagebreak">Part Two &middot; Starting a new app</h2>
+
+<p class="lead">Roughly three hours across two sittings. Do it in order — several steps depend on earlier ones in ways that aren't obvious.</p>
+
+<h3>Stage 1 &middot; The repository</h3>
+
+<div class="step">
+<div class="n">1</div>
+<h4>Create the repo on GitHub</h4>
+<p>Private, with a README. One repo per app, never a monorepo — each app has its own hosting project and its own release rhythm.</p>
+</div>
+
+<div class="step">
+<div class="n">2</div>
+<h4>Scaffold the app locally</h4>
+<pre><code>cd ~/Projects
+npm create vite@latest my-app -- --template react-ts
+cd my-app
+npm install
+npm install -D vite-plugin-pwa</code></pre>
+<p>Then configure the PWA plugin in <span class="mono">vite.config.ts</span> with the app's name, icons and theme colour, so it installs to a home screen properly. Copy this from <span class="mono">fpl-advisor</span> — it's already correct there.</p>
+</div>
+
+<div class="step">
+<div class="n">3</div>
+<h4>Copy the pipeline files across</h4>
+<p>These are what make the repo drivable by the factory. From <span class="mono">fpl-advisor</span>, copy:</p>
+<ul>
+<li><span class="mono">.claude/agents/</span> — analyst, builder, qa</li>
+<li><span class="mono">.claude/settings.json</span> — the permission allowlist</li>
+<li><span class="mono">escalation.md</span> — the canonical tier definitions</li>
+<li><span class="mono">.github/ISSUE_TEMPLATE/ticket.md</span></li>
+<li><span class="mono">design-reference.md</span> — then replace its contents for the new app</li>
+<li><span class="mono">CLAUDE.md</span> — then rewrite the app-specific parts</li>
+<li>An empty <span class="mono">decisions.md</span> with its two headings</li>
+</ul>
+<p>Commit and push all of it to <span class="mono">main</span>.</p>
+</div>
+
+<h3>Stage 2 &middot; Hosting and data</h3>
+
+<div class="step">
+<div class="n">4</div>
+<h4>Connect Vercel</h4>
+<p>Import the repo at <span class="mono">vercel.com/new</span>. It auto-detects Vite. Then — and this one is easy to miss — go to <strong>Settings &#8594; Deployment Protection</strong> and <strong>turn off Vercel Authentication</strong>. If you skip it, every preview link demands a login, which breaks phone review and stops QA from testing the deployed build.</p>
+</div>
+
+<div class="step">
+<div class="n">5</div>
+<h4>Set up Supabase, if the app needs storage</h4>
+<p>Create the project yourself — account creation is always owner-only. Put the URL and publishable key into Vercel's environment variables. <strong>Never in the repo.</strong> Use the variable name <span class="mono">VITE_SUPABASE_PUBLISHABLE_KEY</span>, not the legacy <span class="mono">ANON_KEY</span> name.</p>
+</div>
+
+<h3>Stage 3 &middot; GitHub wiring</h3>
+
+<div class="step">
+<div class="n">6</div>
+<h4>Create the four labels</h4>
+<p>Repo &#8594; <strong>Issues</strong> &#8594; <strong>Labels</strong> &#8594; <strong>New label</strong>, four times. Copy-paste the names exactly — applying a label that doesn't exist silently <em>creates</em> it, so a typo invents a state nothing queries and the ticket vanishes with no error.</p>
+<table>
+<tr><td style="width:40%"><span class="mono">status:ready</span></td><td>green <span class="mono">#0E8A16</span></td></tr>
+<tr><td><span class="mono">status:in-progress</span></td><td>yellow <span class="mono">#FBCA04</span></td></tr>
+<tr><td><span class="mono">status:for-review</span></td><td>blue <span class="mono">#1D76DB</span></td></tr>
+<tr><td><span class="mono">status:blocked</span></td><td>red <span class="mono">#D93F0B</span></td></tr>
+</table>
+</div>
+
+<div class="step">
+<div class="n">7</div>
+<h4>Install the Claude GitHub App on the new repo</h4>
+<p><span class="mono">github.com/apps/claude</span> &#8594; <strong>Configure</strong> &#8594; add the new repository. Without it, runs can't reach pull request and deployment data, and every review packet says "Preview: pending".</p>
+</div>
+
+<h3 class="pagebreak">Stage 4 &middot; The product brief</h3>
+
+<div class="step">
+<div class="n">8</div>
+<h4>Write <span class="mono">product-brief.md</span> and commit it to the repo root</h4>
+<p>This is the document the Analyst consults before reasoning about anything. A silent brief is the single biggest cause of bad overnight decisions. It must state, explicitly:</p>
+<ul>
+<li><strong>What the app is for</strong>, and who uses it (you).</li>
+<li><strong>What personal data it may store</strong> — with an explicit <em>none</em> if that's the answer. This one prevents a whole class of Tier 1 false alarms.</li>
+<li><strong>The chosen external data source</strong>, named, with a written reason. This is a Tier 2 decision you make deliberately rather than letting an agent settle it at 3am.</li>
+<li><strong>Any in-app currency is Tier 3</strong>, if the app has fake money in it. Without this line, the Analyst will block half your backlog.</li>
+<li><strong>Locale and formatting</strong> — Singapore time, date formats, and so on.</li>
+</ul>
+</div>
+
+<h3>Stage 5 &middot; The routine</h3>
+
+<div class="step">
+<div class="n">9</div>
+<h4>Create it</h4>
+<p>At <span class="mono">claude.ai/code/routines</span> &#8594; <strong>New routine</strong>:</p>
+<table>
+<tr><td style="width:32%">Name</td><td>Something like <span class="mono">&lt;App&gt; overnight pipeline</span></td></tr>
+<tr><td>Prompt</td><td>Everything below the rule in <span class="mono">assets/orchestrator-prompt.md</span></td></tr>
+<tr><td>Model</td><td>Sonnet 5</td></tr>
+<tr><td>Repositories</td><td>The new repo, and only that one</td></tr>
+<tr><td>Environment</td><td><span class="mono">App Factory</span> — reuse it; add any new domains the app needs</td></tr>
+<tr><td>Trigger</td><td>Daily, 2:00 AM. Custom cron is available if you want specific nights — note it's evaluated in <strong>UTC</strong></td></tr>
+<tr><td>Connectors</td><td><strong>Remove every one.</strong> They're attached by default with full write access and no prompts</td></tr>
+</table>
+</div>
+
+<div class="step">
+<div class="n">10</div>
+<h4>Smoke test before trusting it</h4>
+<p>File one deliberately trivial ticket with a visible result — a line of text somewhere. Lint it, label it <span class="mono">status:ready</span>, hit <strong>Run now</strong>, and watch. You're testing the pipeline, not the app.</p>
+<p>Then check: did the run exit cheaply when the queue was empty? Did a draft PR open with all five packet parts? Did the issue close itself on merge? Anything wrong here gets fixed <strong>in the agent definitions</strong>, never by hand-editing the output — a hand-fixed PR teaches you nothing about whether the system works.</p>
+</div>
+
+<div class="box tip">
+<span class="label">Two traps that have already caught us once each</span>
+<p><strong>The routine holds its own copy of the prompt.</strong> Editing <span class="mono">orchestrator-prompt.md</span> changes nothing until you re-paste it into the Instructions box. Every edit to that file ends with a re-paste, or it isn't real.</p>
+<p style="margin-bottom:0"><strong>Runs clone the default branch.</strong> Changes sitting on a feature branch, or committed but unpushed, are invisible to every run. After changing anything in the repo, confirm with <span class="mono">git log origin/main --oneline -3</span>.</p>
+</div>
+
+<h2 class="pagebreak">Part Three &middot; When things go wrong</h2>
+
+<table>
+<tr><th style="width:38%">Symptom</th><th>What it means and what to do</th></tr>
+<tr><td>Run says "nothing queued" but you queued something</td><td>The label is wrong. Check for a typo — a mistyped label gets created silently. Look at the repo's label list for near-duplicates.</td></tr>
+<tr><td>Nothing happened at 2am</td><td>Check the routine is <strong>Active</strong> on the dashboard, and check your daily run allowance at <span class="mono">claude.ai/settings/usage</span>.</td></tr>
+<tr><td>Run shows green but nothing was built</td><td>Green means the session exited without infrastructure error. It says nothing about the task. Open the run and read the transcript.</td></tr>
+<tr><td>PR says "Preview: pending"</td><td>Vercel hadn't finished when the run polled. The link usually appears in a bot comment on the PR a minute later.</td></tr>
+<tr><td>Preview link asks you to log in</td><td>Deployment Protection is on. Vercel &#8594; project &#8594; Settings &#8594; Deployment Protection &#8594; turn off Vercel Authentication.</td></tr>
+<tr><td>Packet is missing one of the five parts</td><td>That's a QA-definition bug. Fix <span class="mono">.claude/agents/qa.md</span>, push it to <span class="mono">main</span>, re-run the ticket. Don't edit the PR text.</td></tr>
+<tr><td>An issue is stuck on <span class="mono">status:in-progress</span></td><td>A run died mid-ticket. The next run's recovery handles it automatically: branch has commits &#8594; blocked with a question; no commits &#8594; branch deleted, back to ready.</td></tr>
+<tr><td>Same mistake two nights running</td><td>Stop re-running. Fix the agent definition or the product brief. The system is telling you a rule is missing.</td></tr>
+<tr><td>Tier 1 fired on something harmless, twice</td><td>Don't loosen the tiers — that's how the looseness leaks into real cases. Answer the question in the product brief instead.</td></tr>
+</table>
+
+<h2>Part Four &middot; Questions you'll have</h2>
+
+<dl class="faq">
+
+<dt>How much does a run cost me?</dt>
+<dd>In quota, not money — it all comes from the one Pro subscription, shared with your daytime chat use. A two-ticket night is roughly twelve agent passes. An empty night is nearly free because of the early exit. The practical control is how many tickets you queue, not how often the routine fires.</dd>
+
+<dt>Can I queue five tickets and have them all built?</dt>
+<dd>No — two per run, deliberately. Two tickets in one run beats one ticket in two runs, because every fresh session pays a fixed cost re-reading the repo and the brief. Queue five and the other three simply wait for following nights.</dd>
+
+<dt>Why can't I just merge things automatically if QA passed?</dt>
+<dd>Because that gate is the only thing standing between unreviewed code and production, and it costs about ten seconds. QA is good but it has no phone, no taste, and no memory of what you actually wanted.</dd>
+
+<dt>What if I want to change something mid-run?</dt>
+<dd>You can't, and you shouldn't try. Runs are stateless and unsupervised. Let it finish, then comment on the issue. If it's genuinely urgent, disable the routine on the dashboard.</dd>
+
+<dt>The Builder wants to use some library I've never heard of. Should I care?</dt>
+<dd>It'll appear in the high-impact decisions section with a <em>because</em>, since framework and major library choices are Tier 2. Read the reason. If it doesn't convince you, say so on the issue — reversing a library choice after ten more tickets is exactly the expense that tier exists to flag.</dd>
+
+<dt>Can I run two apps at once?</dt>
+<dd>Technically yes, one routine each. Don't, until the first app has proven the cadence. Two apps means two ticket queues, two morning reviews, and double the quota from the same pool.</dd>
+
+<dt>What happens if a run dies halfway?</dt>
+<dd>Nothing bad. The next run notices an issue stuck on <span class="mono">status:in-progress</span> and recovers it. Uncommitted work is lost, which is by design — losing a partial draft is cheaper than building on top of work nobody inspected.</dd>
+
+<dt>Do I need to understand the code it writes?</dt>
+<dd>Not line by line. You need to understand what changed and why, which is what the packet is for. But if you find yourself merging things you couldn't explain in a sentence, that's the review decay signal.</dd>
+
+<dt>Why is the decision log such a big deal?</dt>
+<dd>Because it's the only record of judgements made while nobody was watching. Six months in, "why is the data shaped like this?" has an answer. During the shakedown the log was accidentally overwritten by a bad write and would have been silently destroyed — the build still passed, QA still passed, the PR still looked clean. It's now protected by an explicit append-and-verify rule.</dd>
+
+<dt>Something in the platform changed and a step here doesn't match.</dt>
+<dd>Trust the screen, not this document. Scheduled cloud agents are a research preview and several things shifted during setup. When in doubt, run a small diagnostic rather than assuming — that's how the project board question got settled.</dd>
+
+</dl>
+
+<h2 class="pagebreak">Quick reference</h2>
+
+<h3>The evening, in four lines</h3>
+<pre><code>1. New issue, Ticket template, fill all four sections
+2. cd ~/Projects/&lt;app&gt; && claude  → lint it with the analyst
+3. Fix what it flags
+4. Add label: status:ready</code></pre>
+
+<h3>The morning, in four lines</h3>
+<pre><code>1. Open the PR, tap the preview link, use the app
+2. Read: what changed / decisions + because / what wasn't tested
+3. Merge → Delete branch  (the issue closes itself)
+4. Or: comment one sentence, re-label status:ready</code></pre>
+
+<h3>Labels</h3>
+<table>
+<tr><td style="width:38%"><span class="mono">status:ready</span></td><td>Queued. You add this. Nothing else starts work.</td></tr>
+<tr><td><span class="mono">status:in-progress</span></td><td>Being built. Set by the run.</td></tr>
+<tr><td><span class="mono">status:for-review</span></td><td>PR open, waiting on you.</td></tr>
+<tr><td><span class="mono">status:blocked</span></td><td>A question for you — read the comment.</td></tr>
+<tr><td><em>issue closed</em></td><td>Done. Happens automatically when you merge.</td></tr>
+</table>
+
+<h3>Links worth bookmarking</h3>
+<table>
+<tr><td style="width:38%">Blocked tickets</td><td><span class="mono">github.com/KeshavPeri/fpl-advisor/issues?q=is:open+label:"status:blocked"</span></td></tr>
+<tr><td>Waiting on review</td><td><span class="mono">...?q=is:open+label:"status:for-review"</span></td></tr>
+<tr><td>The queue</td><td><span class="mono">...?q=is:open+label:"status:ready"</span></td></tr>
+<tr><td>Routine dashboard</td><td><span class="mono">claude.ai/code/routines</span></td></tr>
+<tr><td>Production</td><td><span class="mono">fpl-advisor-wine.vercel.app</span></td></tr>
+</table>
+
+<h3>Rules that don't bend</h3>
+<ul>
+<li>Merging is always manual.</li>
+<li>No agent creates an account, an API key, or a credential. Ever. That's yours.</li>
+<li>Linting happens in the evening, interactively — never inside the run.</li>
+<li>Fix definitions, not outputs.</li>
+<li>Every high-impact decision states its <em>because</em>.</li>
+</ul>
+
+<div class="serif-note">If you only remember one thing: the system's output quality is set by your ticket quality. Everything else here is plumbing that already works.</div>
+
+</body></html>

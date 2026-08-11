@@ -1,0 +1,308 @@
+/* App Factory documentation — shared dark theme */
+
+@page {
+  size: A4;
+  margin: 17mm 15mm 20mm 15mm;
+  background: #0e131c;
+  @bottom-center {
+    content: counter(page);
+    font-family: "Liberation Sans", Arial, sans-serif;
+    font-size: 8pt;
+    color: #5c6b85;
+  }
+}
+
+@page :first {
+  margin: 0;
+  background: #0e131c;
+  @bottom-center { content: ""; }
+}
+
+html { background: transparent; }
+
+body {
+  font-family: Arial, "Liberation Sans", Helvetica, sans-serif;
+  font-size: 10pt;
+  line-height: 1.62;
+  color: #d5dded;
+  margin: 0;
+}
+
+/* ---------- Cover ---------- */
+
+.cover {
+  page-break-after: always;
+  height: 297mm;
+  padding: 88mm 22mm 20mm 22mm;
+  box-sizing: border-box;
+  background: linear-gradient(155deg, #101828 0%, #0e131c 45%, #12202b 100%);
+  position: relative;
+}
+
+.cover .rule {
+  width: 58mm;
+  height: 3px;
+  background: linear-gradient(90deg, #4fd1c5, #63a4ff 55%, #a78bfa);
+  margin-bottom: 12mm;
+}
+
+.cover .eyebrow {
+  font-family: Arial, "Liberation Sans", sans-serif;
+  font-size: 9pt;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #4fd1c5;
+  margin-bottom: 7mm;
+}
+
+.cover h1 {
+  font-family: Georgia, "DejaVu Serif", "Liberation Serif", serif;
+  font-weight: normal;
+  font-size: 33pt;
+  line-height: 1.16;
+  color: #eef3fb;
+  margin: 0 0 8mm 0;
+  letter-spacing: -0.01em;
+}
+
+.cover .sub {
+  font-size: 11.5pt;
+  color: #93a3bd;
+  line-height: 1.6;
+  max-width: 125mm;
+}
+
+.cover .meta {
+  position: absolute;
+  bottom: 22mm;
+  left: 22mm;
+  right: 22mm;
+  font-size: 8.5pt;
+  color: #64748b;
+  border-top: 1px solid #23304a;
+  padding-top: 5mm;
+}
+
+.cover .meta strong {
+  color: #93a3bd;
+  font-weight: normal;
+}
+
+/* ---------- Headings ---------- */
+
+h1, h2, h3, h4 {
+  font-family: Georgia, "DejaVu Serif", "Liberation Serif", serif;
+  font-weight: normal;
+}
+
+h2 {
+  font-size: 19pt;
+  color: #7cc4ff;
+  margin: 11mm 0 4mm 0;
+  padding-bottom: 2.5mm;
+  border-bottom: 1px solid #23304a;
+  page-break-after: avoid;
+  line-height: 1.25;
+}
+
+h3 {
+  font-size: 13.5pt;
+  color: #5fd6c6;
+  margin: 8mm 0 2.5mm 0;
+  page-break-after: avoid;
+  line-height: 1.3;
+}
+
+h4 {
+  font-size: 11pt;
+  color: #b9a6f5;
+  margin: 6mm 0 2mm 0;
+  page-break-after: avoid;
+}
+
+p { margin: 0 0 3.4mm 0; }
+
+/* ---------- Emphasis ---------- */
+
+strong { color: #f2f6fc; font-weight: bold; }
+em { color: #b7c4da; font-style: italic; }
+
+.lead {
+  font-size: 11pt;
+  color: #a9b8d1;
+  line-height: 1.65;
+  margin-bottom: 6mm;
+}
+
+.serif-note {
+  font-family: Georgia, "DejaVu Serif", serif;
+  font-size: 11.5pt;
+  color: #8fd8cd;
+  line-height: 1.55;
+  margin: 6mm 0;
+  padding-left: 6mm;
+  border-left: 2px solid #2f7d72;
+}
+
+a { color: #7cc4ff; text-decoration: none; word-break: break-all; }
+
+code, .mono {
+  font-family: "DejaVu Sans Mono", "Courier New", monospace;
+  font-size: 8.6pt;
+  background: #1a2333;
+  color: #8fe3d6;
+  padding: 0.5mm 1.4mm;
+  border-radius: 2px;
+}
+
+pre {
+  background: #131b28;
+  border: 1px solid #22304a;
+  border-left: 3px solid #4fd1c5;
+  border-radius: 3px;
+  padding: 4mm 5mm;
+  margin: 4mm 0;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  page-break-inside: avoid;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  color: #b9e8de;
+  font-size: 8.4pt;
+  line-height: 1.55;
+}
+
+/* ---------- Lists ---------- */
+
+ul, ol { margin: 0 0 4mm 0; padding-left: 6mm; }
+li { margin-bottom: 1.8mm; }
+li::marker { color: #4fd1c5; }
+
+/* ---------- Tables ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 5mm 0;
+  font-size: 9pt;
+  page-break-inside: avoid;
+}
+
+th {
+  text-align: left;
+  font-family: Georgia, "DejaVu Serif", serif;
+  font-weight: normal;
+  font-size: 9.5pt;
+  color: #7cc4ff;
+  border-bottom: 1px solid #2c3d5c;
+  padding: 2.2mm 3mm 2.2mm 0;
+}
+
+td {
+  padding: 2.2mm 3mm 2.2mm 0;
+  border-bottom: 1px solid #1b2537;
+  vertical-align: top;
+  color: #c3cfe3;
+}
+
+td:first-child { color: #e5ecf7; }
+
+/* ---------- Callouts ---------- */
+
+.box {
+  background: #141d2b;
+  border: 1px solid #24344f;
+  border-radius: 4px;
+  padding: 4.5mm 5mm 3mm 5mm;
+  margin: 5mm 0;
+  page-break-inside: avoid;
+}
+
+.box .label {
+  font-family: Georgia, "DejaVu Serif", serif;
+  font-size: 10.5pt;
+  color: #5fd6c6;
+  display: block;
+  margin-bottom: 2mm;
+}
+
+.warn { border-color: #6b4a2a; background: #1d1810; }
+.warn .label { color: #f0b866; }
+
+.stop { border-color: #6d3340; background: #1e1216; }
+.stop .label { color: #f28b9b; }
+
+.tip { border-color: #2d4a6b; background: #101a26; }
+.tip .label { color: #7cc4ff; }
+
+/* ---------- FAQ ---------- */
+
+.faq { margin: 4mm 0; }
+
+.faq dt {
+  font-family: Georgia, "DejaVu Serif", serif;
+  font-size: 11pt;
+  color: #e8eefa;
+  margin: 5mm 0 1.5mm 0;
+  page-break-after: avoid;
+}
+
+.faq dd {
+  margin: 0 0 3mm 0;
+  color: #b6c3d8;
+}
+
+/* ---------- Steps ---------- */
+
+.step {
+  margin: 0 0 5mm 0;
+  padding-left: 11mm;
+  position: relative;
+  page-break-inside: avoid;
+}
+
+.step .n {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7.5mm;
+  height: 7.5mm;
+  border-radius: 50%;
+  background: #1c2a3f;
+  border: 1px solid #3d6690;
+  color: #7cc4ff;
+  font-family: Georgia, "DejaVu Serif", serif;
+  font-size: 9.5pt;
+  text-align: center;
+  line-height: 7.3mm;
+}
+
+.step h4 { margin: 0 0 1.5mm 0; color: #e8eefa; font-size: 11pt; }
+
+/* ---------- Misc ---------- */
+
+.diagram { margin: 6mm 0; text-align: center; page-break-inside: avoid; }
+.caption { font-size: 8.2pt; color: #6b7c96; margin-top: 2mm; font-style: italic; }
+
+.pagebreak { page-break-before: always; }
+
+.kicker {
+  font-size: 8.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #4fd1c5;
+  margin-bottom: 1.5mm;
+}
+
+.tocline {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #1b2537;
+  padding: 2.2mm 0;
+  font-size: 10pt;
+}
+.tocline span:first-child { color: #d5dded; }
+.tocline span:last-child { color: #5c6b85; }

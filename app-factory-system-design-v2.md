@@ -78,6 +78,19 @@ Design skills (§5) are layered onto Builder, invoked only in polish tickets (§
 
 ### 4.3 The board
 
+> **SUPERSEDED IN IMPLEMENTATION, 9 Aug 2026 — the five states below are correct; "project
+> board" is not.** A Claude Code Routine cannot reach GitHub Projects v2 by any path: GraphQL is
+> blocked at the proxy, and Projects REST exists only org/user-scoped while the proxy permits
+> only repo-scoped paths. Proven by two probe runs, not inferred — see `deltas.md` D1 for the
+> evidence and the rejected alternatives.
+>
+> State now lives on **issue labels**: `status:ready`, `status:in-progress`, `status:for-review`,
+> `status:blocked`, with **Done = the issue is closed**. Ordering is ascending issue number.
+> Everything else in this section — the four working states plus Blocked, and the reasoning for
+> why there are no intermediate mid-run states — stands unchanged. Only the storage moved.
+>
+> Do not "restore" the board. It was not a preference that got dropped; it is unreachable.
+
 A GitHub project board with four working columns plus Blocked:
 
 **Ready → In progress → For review → Done**, plus **Blocked** for tickets awaiting a human decision.

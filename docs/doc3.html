@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css"></head>
+<body>
+
+<div class="cover">
+  <div class="rule"></div>
+  <div class="eyebrow">Primer &middot; v1</div>
+  <h1>The GitHub<br>You Actually Need</h1>
+  <div class="sub">Not a general tutorial. Just the concepts the App Factory runs on, why each one is there, and what the confusing error messages are really telling you.</div>
+  <div class="meta">
+    <strong>For</strong> Keshav &nbsp;·&nbsp; <strong>Written</strong> 10 August 2026<br>
+    Every example here is from your own repository. Every error is one you've already hit.
+  </div>
+</div>
+
+<h2>Why you need any of this</h2>
+
+<p class="lead">GitHub is doing three separate jobs in your system, and they're easy to confuse because they live behind the same website.</p>
+
+<table>
+<tr><td style="width:26%"><strong>Storage</strong></td><td>It holds the code, and every version of it that ever existed.</td></tr>
+<tr><td><strong>The queue</strong></td><td>Issues and their labels are how you tell the overnight agents what to build.</td></tr>
+<tr><td><strong>The gate</strong></td><td>Pull requests are where work waits for you, and merging is the one action no agent can take.</td></tr>
+</table>
+
+<p>You don't need to be good at git. You need to understand about eight ideas well enough that nothing surprises you at 8am.</p>
+
+<h2>The mental model</h2>
+
+<div class="diagram">
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" width="640">
+  <defs>
+    <marker id="b1" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4a6488"/>
+    </marker>
+  </defs>
+
+  <rect x="14" y="14" width="320" height="292" rx="7" fill="#101724" stroke="#22304a"/>
+  <text x="34" y="40" font-family="Georgia,serif" font-size="13" fill="#7cc4ff">Your Mac</text>
+  <text x="34" y="58" font-family="Arial" font-size="9" fill="#5c6b85">~/Projects/fpl-advisor</text>
+
+  <rect x="34" y="74" width="280" height="52" rx="5" fill="#141d2b" stroke="#2c3d5c"/>
+  <text x="48" y="96" font-family="Arial" font-size="10.5" fill="#d5dded">Working files</text>
+  <text x="48" y="113" font-family="Arial" font-size="9" fill="#6b7c96">what you see in Finder and in the editor</text>
+
+  <rect x="34" y="142" width="280" height="52" rx="5" fill="#141d2b" stroke="#2c3d5c"/>
+  <text x="48" y="164" font-family="Arial" font-size="10.5" fill="#d5dded">Local history (.git)</text>
+  <text x="48" y="181" font-family="Arial" font-size="9" fill="#6b7c96">every commit you've made but maybe not sent</text>
+
+  <text x="48" y="228" font-family="Arial" font-size="9.5" fill="#8fd8cd">git add + git commit  &#8594;  saves into local history</text>
+  <text x="48" y="248" font-family="Arial" font-size="9.5" fill="#8fd8cd">git push  &#8594;  sends local history to GitHub</text>
+  <text x="48" y="268" font-family="Arial" font-size="9.5" fill="#8fd8cd">git pull  &#8594;  brings GitHub's history down</text>
+
+  <rect x="380" y="14" width="306" height="292" rx="7" fill="#101a26" stroke="#2d4a6b"/>
+  <text x="400" y="40" font-family="Georgia,serif" font-size="13" fill="#5fd6c6">GitHub</text>
+  <text x="400" y="58" font-family="Arial" font-size="9" fill="#5c6b85">the shared copy — the only one that matters</text>
+
+  <rect x="400" y="74" width="266" height="52" rx="5" fill="#12202b" stroke="#2f6b62"/>
+  <text x="414" y="96" font-family="Arial" font-size="10.5" fill="#d5dded">main branch</text>
+  <text x="414" y="113" font-family="Arial" font-size="9" fill="#6b7c96">the real app. This is what gets deployed.</text>
+
+  <rect x="400" y="142" width="266" height="52" rx="5" fill="#12202b" stroke="#2f6b62"/>
+  <text x="414" y="164" font-family="Arial" font-size="10.5" fill="#d5dded">Issues + labels</text>
+  <text x="414" y="181" font-family="Arial" font-size="9" fill="#6b7c96">your ticket queue</text>
+
+  <rect x="400" y="210" width="266" height="52" rx="5" fill="#12202b" stroke="#2f6b62"/>
+  <text x="414" y="232" font-family="Arial" font-size="10.5" fill="#d5dded">Pull requests</text>
+  <text x="414" y="249" font-family="Arial" font-size="9" fill="#6b7c96">finished work waiting for your approval</text>
+
+  <path d="M320,100 L392,100" fill="none" stroke="#4a6488" stroke-width="1.3" marker-end="url(#b1)"/>
+  <path d="M392,168 L322,168" fill="none" stroke="#4a6488" stroke-width="1.3" marker-end="url(#b1)"/>
+
+</svg>
+<div class="caption">Almost every confusing git error comes from the gap between these two boxes.</div>
+</div>
+
+<div class="serif-note">The single most useful idea: your Mac and GitHub are two separate copies. Nothing moves between them unless you say so. When something behaves strangely, ask "which copy am I looking at?" and the answer usually falls out.</div>
+
+<h2 class="pagebreak">The eight ideas</h2>
+
+<h3>1 &middot; Repository</h3>
+<p>A project folder that git is tracking. Yours is <span class="mono">KeshavPeri/fpl-advisor</span>. It exists twice: on your Mac at <span class="mono">~/Projects/fpl-advisor</span>, and on GitHub. One repo per app, deliberately — each has its own hosting and its own release rhythm.</p>
+
+<h3>2 &middot; Commit</h3>
+<p>A saved snapshot with a message explaining why. Not a save button — a save button with a note attached, and the note is the point. Six months on, <span class="mono">git log</span> is a written record of what happened and why.</p>
+<p>A commit lives only on your Mac until you push it. This catches people constantly.</p>
+
+<h3>3 &middot; Branch</h3>
+<p>A parallel line of work. <span class="mono">main</span> is the real app — what Vercel deploys to production. Everything else is temporary.</p>
+<p>Your agents work on branches named <span class="mono">claude/ticket-3-home-screen-tagline</span> and so on. That prefix isn't decorative: the platform only reliably accepts pushes to <span class="mono">claude/</span>-prefixed branches, so the convention matches the restriction rather than fighting it.</p>
+<p>Branches are cheap and disposable. Delete them after merging. A leftover <span class="mono">claude/ticket-*</span> branch with commits on it will make the next run think a previous run died.</p>
+
+<h3>4 &middot; Push and pull</h3>
+<p><span class="mono">git push</span> sends your local commits to GitHub. <span class="mono">git pull</span> brings GitHub's down. <strong>The agents only ever see what's on GitHub</strong> — a cloud run clones the repo fresh from the default branch every time.</p>
+
+<div class="box warn">
+<span class="label">This has already bitten you once</span>
+<p style="margin-bottom:0">You committed rewritten agent definitions and the routine kept using the old ones — because the commit had landed on a leftover feature branch, not on <span class="mono">main</span>, and hadn't been pushed. After changing anything the agents rely on, verify with <span class="mono">git log origin/main --oneline -3</span>. If your change isn't in that list, the agents cannot see it.</p>
+</div>
+
+<h3>5 &middot; Issue</h3>
+<p>A ticket. In normal projects it's a to-do note; here it's a work order that an agent reads and executes. Which is why the template has a mandatory definition-of-done section — an agent can't infer what "finished" means.</p>
+
+<h3>6 &middot; Label</h3>
+<p>A coloured tag on an issue. In your system labels aren't decoration — they <em>are</em> the state machine. Exactly one <span class="mono">status:</span> label per open issue, and that label determines what happens tonight.</p>
+
+<div class="box stop">
+<span class="label">The dangerous property of labels</span>
+<p style="margin-bottom:0">Applying a label that doesn't exist <strong>creates it silently</strong>. There's no error and no warning. Type <span class="mono">status:redy</span> and GitHub cheerfully makes a new label, your ticket carries a state nothing queries, and it vanishes from the pipeline. Always pick from the dropdown; never type a label name.</p>
+</div>
+
+<h3 class="pagebreak">7 &middot; Pull request</h3>
+<p>The name is unhelpful. A pull request is <strong>a proposal to merge one branch into another</strong>, with a discussion attached. Your agents open one per finished ticket, from their <span class="mono">claude/ticket-*</span> branch into <span class="mono">main</span>.</p>
+<p>A <strong>draft</strong> PR is one explicitly marked not-ready-to-merge. Agents always open drafts. Converting it with <strong>Ready for review</strong> is a small deliberate act by you — which is exactly the point.</p>
+<p>Tabs worth knowing:</p>
+<ul>
+<li><strong>Conversation</strong> — the description (your review packet) and comments. This is where you live.</li>
+<li><strong>Files changed</strong> — the combined difference between the branch and <span class="mono">main</span>. Green added, red removed.</li>
+<li><strong>Commits</strong> — the individual steps. Rarely useful.</li>
+</ul>
+
+<div class="box tip">
+<span class="label">Files changed vs. Commits — a real distinction</span>
+<p style="margin-bottom:0">During the smoke test, one commit accidentally deleted your entire decisions log and a later commit restored it. Looking at that <em>commit</em> showed a terrifying wall of red. Looking at <strong>Files changed</strong> — the net effect — showed six harmless added lines. When you want to know "what will actually change if I merge this," it's always Files changed.</p>
+</div>
+
+<h3>8 &middot; Merge</h3>
+<p>Taking the branch's changes into <span class="mono">main</span>. Vercel notices and deploys to production within a minute or two. This is the only step no agent can perform.</p>
+<p>GitHub offers three ways. You only need two:</p>
+<table>
+<tr><td style="width:32%"><strong>Create a merge commit</strong></td><td>Keeps every individual commit from the branch. Fine as a default.</td></tr>
+<tr><td><strong>Squash and merge</strong></td><td>Collapses the whole branch into one commit on <span class="mono">main</span>. Use this when the branch has messy intermediate history — like a mistake and its correction.</td></tr>
+<tr><td>Rebase and merge</td><td>Ignore it.</td></tr>
+</table>
+
+<h3>Bonus &middot; "Closes #6"</h3>
+<p>When a PR description contains <span class="mono">Closes #6</span>, merging it automatically closes issue 6. That's the mechanism that moves your ticket to Done without anyone touching a label. If an issue doesn't close itself on merge, the agent left that line out — which is a bug in the prompt, not something to fix by hand.</p>
+
+<h2 class="pagebreak">Errors you've already seen</h2>
+
+<h4>"Unable to create '.git/index.lock': File exists"</h4>
+<p>Git locks the repo while it works. If a process dies mid-operation, the lock file is left behind and every later command refuses to run. Nothing is broken and nothing is lost.</p>
+<pre><code>rm ~/Projects/fpl-advisor/.git/index.lock</code></pre>
+<p>Only do this when you're sure no git command is genuinely running.</p>
+
+<h4>"Updates were rejected because the remote contains work that you do not have locally"</h4>
+<p>GitHub has commits you don't. Usually because you merged a PR in the browser. Git won't overwrite them, which is correct behaviour.</p>
+<pre><code>git pull --rebase origin main
+git push origin main</code></pre>
+<p><span class="mono">--rebase</span> replays your commits on top of what GitHub has, instead of creating a merge commit for what's usually a one-file change.</p>
+
+<h4>"error: unable to delete 'X': remote ref does not exist"</h4>
+<p>You tried to delete a branch on GitHub that was already deleted. Your Mac was holding a stale pointer to it. Harmless.</p>
+<pre><code>git remote prune origin</code></pre>
+
+<h4>"error: branch 'claude/ticket-5-...' not found"</h4>
+<p>You tried to delete a branch locally that only ever existed on GitHub — because a cloud run created it, not your Mac. Nothing to do.</p>
+
+<h4>"nothing added to commit but untracked files present"</h4>
+<p>There's a new file git isn't tracking yet. <span class="mono">git add .</span> won't include it if it's ignored. This is how <span class="mono">.claude/settings.json</span> sat uncommitted for weeks while everyone assumed it was in the repo.</p>
+
+<h2>Commands worth knowing</h2>
+
+<p>Roughly ten will cover everything you do. The first four are read-only — they change nothing, so run them freely whenever you're unsure.</p>
+
+<pre><code># Read-only. Safe. Run these when confused.
+git status                        # what's changed, which branch
+git branch                        # local branches, * marks current
+git log --oneline -5              # last 5 commits here
+git log origin/main --oneline -5  # last 5 commits on GitHub
+
+# Everyday
+git add &lt;file&gt;                    # stage a specific file
+git commit -m "why this change"   # save with a message
+git push origin main              # send to GitHub
+git pull                          # bring GitHub's changes down
+
+# Occasional
+git checkout main                 # switch to main
+git remote prune origin           # clear stale branch pointers
+git branch -D &lt;branch&gt;            # delete a local branch</code></pre>
+
+<div class="box tip">
+<span class="label">A habit worth forming</span>
+<p style="margin-bottom:0">Run <span class="mono">git status</span> before and after anything that changes state. It tells you the branch you're on, what's modified, and whether you're ahead of GitHub. Most git confusion is really "I didn't know which branch I was on."</p>
+</div>
+
+<h2 class="pagebreak">The parts specific to your system</h2>
+
+<h3>Why the agents can't touch a project board</h3>
+<p>GitHub Projects — the kanban-board feature — is reachable only through an API called GraphQL. Cloud runs sit behind a security proxy that blocks GraphQL and permits only repository-scoped requests. Both routes are closed, which was confirmed by running two diagnostic probes rather than by reading documentation.</p>
+<p>Labels are ordinary repository data, so they work. They also do something a board never could: a blocked ticket gets a comment, and a comment sends you a phone notification.</p>
+
+<h3>Why branches are named <span class="mono">claude/...</span></h3>
+<p>Cloud runs push reliably only to branches with that prefix. The convention matches the platform's restriction rather than fighting it.</p>
+
+<h3>Why the agents can't push to <span class="mono">main</span></h3>
+<p>By design, and it's load-bearing. It means no agent can change production without passing through a pull request and your merge. It also has a side effect worth understanding: when the orchestrator writes to the decision log, that write rides the ticket's branch and only reaches <span class="mono">main</span> when you merge. For a blocked ticket — which never merges — decisions are recorded in the issue comment instead.</p>
+
+<h3>What the Claude GitHub App is for</h3>
+<p>An installed integration granting the cloud runs access to your repository's issues, pull requests and deployment status. Without it, runs can clone the code but can't read PR data — so every review packet comes back saying "Preview: pending".</p>
+
+<h2>Glossary</h2>
+
+<table>
+<tr><td style="width:30%"><strong>branch</strong></td><td>A parallel line of work. <span class="mono">main</span> is the real one.</td></tr>
+<tr><td><strong>clone</strong></td><td>Downloading a full copy of a repository.</td></tr>
+<tr><td><strong>commit</strong></td><td>A saved snapshot with a message.</td></tr>
+<tr><td><strong>default branch</strong></td><td>The branch GitHub shows first, and the one cloud runs clone. Yours is <span class="mono">main</span>.</td></tr>
+<tr><td><strong>diff</strong></td><td>The difference between two versions. Green added, red removed.</td></tr>
+<tr><td><strong>draft PR</strong></td><td>A pull request explicitly marked not ready to merge.</td></tr>
+<tr><td><strong>fast-forward</strong></td><td>A merge with nothing to reconcile — git just moves the pointer.</td></tr>
+<tr><td><strong>fetch / pull</strong></td><td>Fetch downloads GitHub's changes. Pull downloads and applies them.</td></tr>
+<tr><td><strong>issue</strong></td><td>A ticket. Here, a work order for an agent.</td></tr>
+<tr><td><strong>label</strong></td><td>A tag on an issue. Here, the pipeline's state machine.</td></tr>
+<tr><td><strong>merge</strong></td><td>Bringing a branch's changes into another branch.</td></tr>
+<tr><td><strong>origin</strong></td><td>Git's nickname for "the copy on GitHub".</td></tr>
+<tr><td><strong>PR</strong></td><td>Pull request. A proposal to merge, with discussion attached.</td></tr>
+<tr><td><strong>push</strong></td><td>Sending local commits to GitHub.</td></tr>
+<tr><td><strong>rebase</strong></td><td>Replaying your commits on top of someone else's.</td></tr>
+<tr><td><strong>remote</strong></td><td>A copy of the repo somewhere else. Yours is GitHub.</td></tr>
+<tr><td><strong>squash</strong></td><td>Collapsing several commits into one.</td></tr>
+<tr><td><strong>staging</strong></td><td>The waiting area between editing and committing. What <span class="mono">git add</span> fills.</td></tr>
+<tr><td><strong>untracked</strong></td><td>A file git has never been told to watch.</td></tr>
+</table>
+
+<h2>Questions</h2>
+
+<dl class="faq">
+
+<dt>Can I break something permanently?</dt>
+<dd>Almost never. Git keeps everything committed, and anything pushed to GitHub is recoverable. The two genuinely destructive things are deleting the repository itself, and force-pushing over history — you'll never need either. Uncommitted work is the one real vulnerability, which is why agents are told to commit early and often.</dd>
+
+<dt>Do I need the command line at all?</dt>
+<dd>Barely. Reviewing, merging, issues, labels and branch deletion are all in the browser and on your phone. Terminal is only needed for linting tickets and for occasionally pushing a change to an agent definition.</dd>
+
+<dt>What if I edit a file on my Mac and the agent edits the same file overnight?</dt>
+<dd>You'll get a merge conflict when you pull — git asking you to choose. Easily avoided: don't hand-edit files inside an app repo while a ticket for them is queued. Edit the agent definitions and docs, and let the pipeline own the source code.</dd>
+
+<dt>Why is the decision log on a branch instead of <span class="mono">main</span>?</dt>
+<dd>Because agents can't push to <span class="mono">main</span>. Log entries ride the ticket's branch and land when you merge. It's a consequence of the safety property, not an oversight.</dd>
+
+<dt>Should I keep the GitHub mobile app?</dt>
+<dd>Yes. Your whole morning review is designed around it — notification, tap the preview, read the packet, merge. It's the closest thing this system has to a user interface.</dd>
+
+<dt>What's the difference between closing an issue and deleting it?</dt>
+<dd>Closing is normal and reversible; the issue stays searchable, which matters because useful reasoning often lives in the comments. Deleting is permanent. Always close.</dd>
+
+</dl>
+
+<div class="serif-note">You don't need to master git. You need to know that your Mac and GitHub are separate copies, that <span class="mono">main</span> is the real app, that labels drive the queue, and that merging is yours alone. Everything else you can look up.</div>
+
+</body></html>

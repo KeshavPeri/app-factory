@@ -20,6 +20,24 @@ revised from evidence in Phase 8. Every file in this folder carries a
    `fpl-advisor`; the copies here are byte-identical mirrors of what runs. `escalation.md`
    (the single canonical copy of the §4.5 tiers, extracted at task 4.6) sits alongside them.
 
+## Starting a new app
+
+- **`new-app-kickoff.md`** — the file to hand a fresh Cowork chat when beginning a new app. Part 0
+  is a context primer on how the pipeline works and the five properties that change how a brief
+  must be written; Part 1 is a design-workshop playbook (problem → `product-brief.md`); Part 2
+  turns that brief into GitHub issues and files them. Parts 3 and 4 carry the hard-won gotchas and
+  the refusals. Run Parts 1 and 2 as **separate chats**, both given this same file.
+
+## Phase 5/6 working files (throwaway, not part of the four)
+
+- **`routine-probe-prompt.md`** — one-off diagnostic prompt for task 5.6. Answers whether a cloud
+  routine can actually read and write the GitHub project board (see `../deltas.md` D1). Delete or
+  overwrite once it has run.
+- **`smoke-test-tickets.md`** — the three Phase 6 test tickets: the smoke ticket (6.1), the
+  deliberate Tier-1 ticket and its harmless companion (6.9).
+
+Neither is revised at Phase 8; both are scaffolding.
+
 ## Reference
 
 Full reasoning: `../app-factory-system-design-v2.md`. Section numbers (§4.5, §4.8, etc.) in

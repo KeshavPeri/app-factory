@@ -27,11 +27,25 @@ comfort: spell out every terminal command; prefer web dashboards where they exis
   design reference, `escalation.md`, and `agents/` (analyst, builder, qa + orchestrator
   prompt). **The agent files and escalation.md are byte-identical mirrors of what is
   committed in `fpl-advisor`** (`.claude/agents/`, repo root). Change them in lockstep or
-  not at all — a drifted mirror is worse than none. v0.2 as of Phase 4; rewritten from
-  evidence at Phase 8.
+  not at all — a drifted mirror is worse than none. v0.3 as of Phase 5 (labels replaced the
+  project board); rewritten from evidence at Phase 8.
+- **`GITHUB-SETUP-labels.md`** — the one-time GitHub-side setup the label pipeline needs.
+
+**Two drift traps this repo has already fallen into once each.** (a) The live routine holds its
+*own copy* of `assets/orchestrator-prompt.md` — editing the file changes nothing until it is
+re-pasted into the routine's Instructions box, so every edit to that file ends with a re-paste
+or it is not real. (b) A cloud run clones the app repo's **default branch**, so definition
+changes that sit on a feature branch, or unpushed, are invisible to every run: after changing
+anything in `fpl-advisor`, confirm with `git log origin/main --oneline -3` before assuming it
+took effect.
 - **`routines-verification.md`, `deltas.md`, `environment-baseline.md`** — platform facts as
   verified on a given date. Claude Code Routines is a research preview: re-verify against
-  current docs at time of use, never trust these files' screenshots-of-the-past.
+  current docs at time of use, never trust these files' screenshots-of-the-past. `deltas.md`'s
+  second pass (9 Aug, pre-Phase-5) carries the **Projects v2 / GraphQL-proxy** question — read
+  D1 before touching anything that assumes the routine can move a board card.
+- **`PHASE-5-RUNBOOK.md`, `PHASE-6-RUNBOOK.md`** — click-by-click execution notes for the
+  current phase. Written from the docs as of 9 Aug 2026; if a dashboard screen doesn't match,
+  the platform moved and the runbook is the thing that's wrong.
 
 ## Rules that keep biting
 
@@ -51,6 +65,9 @@ comfort: spell out every terminal command; prefer web dashboards where they exis
 
 ## Current state (update this line when it changes)
 
-Phases 0–3 complete. Phase 4 files written and committed; task 4.7 (subagent dry-runs) still
-to verify, then the workbook update and `HANDOFF-phase-5-to-6.md`. Do not start Phase 5/6
-without that handoff.
+Phases 0–4 complete. Phase 5 tasks 5.1 and 5.3–5.6 complete (9 Aug 2026); 5.2 pending the
+GitHub-side setup. **The GitHub project board is out of the design** — a routine cannot reach
+Projects v2 by any path, proven by two probe runs; state is now `status:` labels on open issues,
+Done = closed. Agent definitions, orchestrator prompt and escalation mirrors are at v0.3.
+Next: `GITHUB-SETUP-labels.md`, then Phase 5 step 8, then Phase 6 per `PHASE-6-RUNBOOK.md`.
+Do not start Phase 7 before that session writes `HANDOFF-phase-7.md`.

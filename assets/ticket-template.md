@@ -3,8 +3,12 @@ v0.1 — provisional, revised at Phase 8
 # Ticket template
 
 Shaped to pass the evening lint pass (§4.7) first time. The Analyst reads every field below
-before a ticket goes into Ready — fill them in, don't leave placeholders, and this ticket won't
-bounce back for clarification while Keshav is asleep.
+before a ticket is given the `status:ready` label — fill them in, don't leave placeholders, and
+this ticket won't bounce back for clarification while Keshav is asleep.
+
+A ticket is queued by adding `status:ready` by hand after the lint pass, and tickets are picked
+up in ascending issue number. There is no other priority mechanism, so file tickets in the order
+you want them built.
 
 ---
 

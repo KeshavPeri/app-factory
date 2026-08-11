@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css"></head>
+<body>
+
+<div class="cover">
+  <div class="rule"></div>
+  <div class="eyebrow">System explainer &middot; v1</div>
+  <h1>The App&nbsp;Factory</h1>
+  <div class="sub">A semi-autonomous pipeline where AI agents build personal web apps overnight, and one person reviews the results in fifteen minutes over coffee.</div>
+  <div class="meta">
+    <strong>Owner</strong> Keshav, Singapore &nbsp;·&nbsp; <strong>Budget</strong> One Claude Pro subscription &nbsp;·&nbsp; <strong>Status</strong> Shakedown complete, first app pending<br>
+    Written 10 August 2026, from a system that has run end to end.
+  </div>
+</div>
+
+<h2>What this is</h2>
+
+<p class="lead">Most people use an AI coding assistant by sitting next to it. You open a session, describe what you want, watch it work, correct it, and close the session. The AI is a tool you operate.</p>
+
+<p>This system is arranged differently. Work is described in advance, queued, and picked up by a scheduled agent that runs in the cloud at 2am while the laptop is shut. In the morning there is a pull request waiting, with a plain-English summary and a link to a working preview of the app. The owner reads a paragraph, taps the link, tries the feature, and either merges it or writes a sentence explaining what is wrong.</p>
+
+<p>The design target is <strong>ten to fifteen minutes of human involvement per run night</strong>. Not because the human is lazy, but because anything more expensive than that stops happening by week three.</p>
+
+<div class="serif-note">The interesting constraint is not capability. It is quota. Everything in this document exists because one Claude Pro subscription has to cover the overnight agents, the daytime chat, and the morning review — from a single shared pool.</div>
+
+<h2>The shape of it</h2>
+
+<div class="diagram">
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" width="640">
+  <defs>
+    <marker id="a1" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4a6488"/>
+    </marker>
+  </defs>
+
+  <rect x="12" y="20" width="150" height="76" rx="6" fill="#141d2b" stroke="#2c3d5c"/>
+  <text x="87" y="46" font-family="Georgia,serif" font-size="14" fill="#7cc4ff" text-anchor="middle">Evening</text>
+  <text x="87" y="66" font-family="Arial" font-size="10.5" fill="#93a3bd" text-anchor="middle">You write a ticket</text>
+  <text x="87" y="82" font-family="Arial" font-size="10.5" fill="#93a3bd" text-anchor="middle">and queue it</text>
+
+  <rect x="275" y="20" width="150" height="76" rx="6" fill="#12202b" stroke="#2f6b62"/>
+  <text x="350" y="46" font-family="Georgia,serif" font-size="14" fill="#5fd6c6" text-anchor="middle">2:00 AM</text>
+  <text x="350" y="66" font-family="Arial" font-size="10.5" fill="#93a3bd" text-anchor="middle">Agents build,</text>
+  <text x="350" y="82" font-family="Arial" font-size="10.5" fill="#93a3bd" text-anchor="middle">test, open a PR</text>
+
+  <rect x="538" y="20" width="150" height="76" rx="6" fill="#151328" stroke="#4b3f7a"/>
+  <text x="613" y="46" font-family="Georgia,serif" font-size="14" fill="#b9a6f5" text-anchor="middle">Morning</text>
+  <text x="613" y="66" font-family="Arial" font-size="10.5" fill="#93a3bd" text-anchor="middle">You review</text>
+  <text x="613" y="82" font-family="Arial" font-size="10.5" fill="#93a3bd" text-anchor="middle">and merge</text>
+
+  <line x1="166" y1="58" x2="268" y2="58" stroke="#4a6488" stroke-width="1.4" marker-end="url(#a1)"/>
+  <line x1="429" y1="58" x2="531" y2="58" stroke="#4a6488" stroke-width="1.4" marker-end="url(#a1)"/>
+
+  <path d="M613,100 L613,140 L87,140 L87,104" fill="none" stroke="#3a4d6b" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#a1)"/>
+  <text x="350" y="134" font-family="Arial" font-size="9.5" fill="#5c6b85" text-anchor="middle">next ticket</text>
+
+  <rect x="12" y="180" width="676" height="96" rx="6" fill="#101724" stroke="#1f2c42"/>
+  <text x="30" y="204" font-family="Georgia,serif" font-size="12.5" fill="#7cc4ff">Inside the 2am run</text>
+  <text x="30" y="228" font-family="Arial" font-size="10" fill="#93a3bd">Orchestrator reads the queue &#8594; Builder writes code &#8594; QA tests it &#8594; draft PR opens</text>
+  <text x="30" y="250" font-family="Arial" font-size="10" fill="#93a3bd">The Analyst is consulted whenever something is ambiguous or risky.</text>
+  <text x="30" y="268" font-family="Arial" font-size="10" fill="#6b7c96">Nothing merges without a human. That gate is never automated.</text>
+</svg>
+<div class="caption">The loop. The laptop is closed for the middle box.</div>
+</div>
+
+<h2>Where everything runs</h2>
+
+<table>
+<tr><th style="width:32%">Piece</th><th>What it is</th></tr>
+<tr><td>Claude Code Routines</td><td>Scheduled cloud agents on Anthropic's infrastructure. This is what fires at 2am. Billed against the Pro subscription, not a separate API bill.</td></tr>
+<tr><td>GitHub</td><td>One repository per app. Holds the code, the ticket queue (as issues), the agent definitions, and the decision log.</td></tr>
+<tr><td>Vercel</td><td>Hosting. Every pull request automatically gets its own live preview URL — this is what makes reviewing from a phone actually work.</td></tr>
+<tr><td>Supabase</td><td>Database and auth, where an app needs them.</td></tr>
+<tr><td>The apps</td><td>Progressive web apps. One codebase that installs to an iPhone home screen and runs in a laptop browser. No App Store, no Xcode.</td></tr>
+</table>
+
+<p>Nothing runs on the laptop. Local overnight execution was considered and rejected: Macs sleep, scheduling is fiddly, and failures are silent. Everything the agent needs already lives in the GitHub repository.</p>
+
+<h2 class="pagebreak">The team</h2>
+
+<p>Four roles, but only three of them are separate agents. The fourth is the run itself.</p>
+
+<table>
+<tr><th style="width:22%">Role</th><th>Job</th></tr>
+<tr><td><strong>Orchestrator</strong></td><td>Not a separate agent — this <em>is</em> the scheduled run's top-level session. It reads the queue, picks tickets, dispatches the others, moves state, writes the decision log, and opens pull requests.</td></tr>
+<tr><td><strong>Analyst</strong></td><td>Holds the product brief. Classifies every question and every intended action against the escalation tiers. Also does an evening pass over queued tickets, flagging ambiguity while the human is still awake to answer.</td></tr>
+<tr><td><strong>Builder</strong></td><td>Writes the code. One ticket per invocation, on its own branch.</td></tr>
+<tr><td><strong>QA</strong></td><td>Tests the work against the ticket's definition of done, item by item. On pass, writes the review packet the human actually reads.</td></tr>
+</table>
+
+<p>They cannot talk to each other. Every exchange routes through the orchestrator. That sounds inefficient and is in fact deliberate: it keeps one agent responsible for state, and it means a subagent that goes wrong can only affect its own narrow output.</p>
+
+<div class="box tip">
+<span class="label">A role that was removed</span>
+<p style="margin-bottom:0">An earlier design had a fifth agent, a Reviewer. It was cut because its function was almost entirely duplicated by QA's final pass plus the mandatory human merge gate — at a cost of roughly one-sixth of every ticket's token budget. Its one genuinely distinct output, the human-readable summary, moved to QA. It gets reinstated only if merged work starts shipping problems the remaining chain misses.</p>
+</div>
+
+<h2>The safety mechanism</h2>
+
+<p>An agent working unsupervised at 3am cannot ask permission. There is no prompt, no approval dialog, nobody awake. So the question "what is this thing allowed to decide on its own?" has to be answered in advance, in writing, precisely.</p>
+
+<p>Three tiers do that work.</p>
+
+<div class="box stop">
+<span class="label">Tier 1 — stop and wait for the human</span>
+<p>Real money moving anywhere. Storing or collecting personal data. <strong>Anything requiring a new account, sign-up, API key or credential — free or not.</strong> Destructive operations on live data.</p>
+<p style="margin-bottom:0">The ticket stops. The run continues with the next one.</p>
+</div>
+
+<div class="box warn">
+<span class="label">Tier 2 — decide, proceed, flag it loudly</span>
+<p style="margin-bottom:0">The test is one question: <em>would this be expensive to reverse after ten more tickets are built on top of it?</em> Data structure choices. Framework and major library choices. Committing to an outside service. These get logged as high-impact, and every entry must state <strong>why</strong>, not just what.</p>
+</div>
+
+<div class="box">
+<span class="label">Tier 3 — decide, proceed, log a line</span>
+<p style="margin-bottom:0">Everything else. Conventions, layout, formatting, sensible defaults.</p>
+</div>
+
+<p>Two structural rules sit above the tiers. First, <strong>the tiers classify decisions, not just questions</strong> — an agent that never asks anything can still quietly make a Tier 1 decision by adding a data field "as a sensible default." Second, <strong>a Tier 1 stop blocks the ticket, never the run</strong>. One risky ticket must not waste a whole night.</p>
+
+<div class="serif-note">The subtle failure mode here is not a Tier 1 that fires too rarely. It is one that fires too often. Repeated false alarms pressure the owner into loosening the wording, and the looseness then leaks into the cases that mattered. When Tier 1 fires wrongly twice on the same pattern, the fix is to answer the question in the product brief — never to soften the tier.</div>
+
+<h2 class="pagebreak">How work is tracked</h2>
+
+<p>Each ticket is a GitHub issue. Its state lives in a single label:</p>
+
+<div class="diagram">
+<svg viewBox="0 0 700 190" xmlns="http://www.w3.org/2000/svg" width="640">
+  <defs>
+    <marker id="a2" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4a6488"/>
+    </marker>
+  </defs>
+
+  <rect x="8" y="46" width="128" height="46" rx="23" fill="#122318" stroke="#3d7a4e"/>
+  <text x="72" y="68" font-family="DejaVu Sans Mono,monospace" font-size="10" fill="#7fd694" text-anchor="middle">status:ready</text>
+  <text x="72" y="83" font-family="Arial" font-size="8.5" fill="#5c6b85" text-anchor="middle">queued by you</text>
+
+  <rect x="166" y="46" width="140" height="46" rx="23" fill="#231e10" stroke="#8a6a2c"/>
+  <text x="236" y="68" font-family="DejaVu Sans Mono,monospace" font-size="10" fill="#f0c66c" text-anchor="middle">status:in-progress</text>
+  <text x="236" y="83" font-family="Arial" font-size="8.5" fill="#5c6b85" text-anchor="middle">being built now</text>
+
+  <rect x="336" y="46" width="140" height="46" rx="23" fill="#10202f" stroke="#33648f"/>
+  <text x="406" y="68" font-family="DejaVu Sans Mono,monospace" font-size="10" fill="#7cc4ff" text-anchor="middle">status:for-review</text>
+  <text x="406" y="83" font-family="Arial" font-size="8.5" fill="#5c6b85" text-anchor="middle">waiting on you</text>
+
+  <rect x="506" y="46" width="128" height="46" rx="23" fill="#151328" stroke="#4b3f7a"/>
+  <text x="570" y="68" font-family="Georgia,serif" font-size="12" fill="#b9a6f5" text-anchor="middle">closed</text>
+  <text x="570" y="83" font-family="Arial" font-size="8.5" fill="#5c6b85" text-anchor="middle">done, merged</text>
+
+  <line x1="140" y1="69" x2="160" y2="69" stroke="#4a6488" stroke-width="1.4" marker-end="url(#a2)"/>
+  <line x1="310" y1="69" x2="330" y2="69" stroke="#4a6488" stroke-width="1.4" marker-end="url(#a2)"/>
+  <line x1="480" y1="69" x2="500" y2="69" stroke="#4a6488" stroke-width="1.4" marker-end="url(#a2)"/>
+
+  <rect x="250" y="132" width="150" height="42" rx="21" fill="#1e1216" stroke="#8a4152"/>
+  <text x="325" y="152" font-family="DejaVu Sans Mono,monospace" font-size="10" fill="#f28b9b" text-anchor="middle">status:blocked</text>
+  <text x="325" y="167" font-family="Arial" font-size="8.5" fill="#5c6b85" text-anchor="middle">a question for you</text>
+
+  <path d="M236,96 L236,153 L244,153" fill="none" stroke="#7a4050" stroke-width="1.2" stroke-dasharray="3,3" marker-end="url(#a2)"/>
+  <path d="M400,153 L440,153 L440,96" fill="none" stroke="#4a6488" stroke-width="1.2" stroke-dasharray="3,3" marker-end="url(#a2)"/>
+</svg>
+<div class="caption">Five states. "Done" is simply the issue being closed, which happens automatically when you merge.</div>
+</div>
+
+<p>This was originally a GitHub project board with columns. It isn't any more, and the reason is worth recording: <strong>a scheduled cloud agent physically cannot reach GitHub Projects.</strong> The API it would need is GraphQL-only, and the security proxy those runs sit behind blocks GraphQL entirely. This was established by running two diagnostic probes rather than by reading documentation. Labels do the same job, are reachable, and have one advantage the board never had — a blocked ticket sends a phone notification.</p>
+
+<h2>What the human actually reads</h2>
+
+<p>The whole safety model routes through one person glancing at something on a phone at 8am. If that something is a code diff, the realistic outcome by week three is rubber-stamping green ticks. So the artifact is specified rather than left to chance. Every pull request description contains exactly five things, written by QA:</p>
+
+<ol>
+<li><strong>The preview URL, on the first line.</strong> The review is <em>using the app</em>, not reading the diff.</li>
+<li><strong>What changed, in plain language.</strong> Three to six sentences. No file names — a file path is an invitation to go read the diff.</li>
+<li><strong>High-impact decisions</strong>, each with its <em>because</em>. Or the explicit word "None."</li>
+<li><strong>What was tested, and what was not.</strong> Every unverifiable item named individually.</li>
+<li><strong>One line on what to look at specifically.</strong></li>
+</ol>
+
+<p>Point four is the one that does the heavy lifting. QA has no phone, so anything requiring a real device comes back as CANNOT VERIFY and is named. An honest "I did not test this" is worth far more than a packet that implies coverage it doesn't have.</p>
+
+<h2 class="pagebreak">Deliberate omissions</h2>
+
+<p>A fresh reader — human or AI — tends to suggest the same handful of additions. Each was considered and rejected for a reason.</p>
+
+<table>
+<tr><th style="width:34%">Rejected</th><th>Why</th></tr>
+<tr><td>Multi-agent "teams"</td><td>Roughly three to four times the token consumption for the same task. Wrong economics on a Pro subscription.</td></tr>
+<tr><td>Auto-merging pull requests</td><td>The manual gate costs about ten seconds and is the only thing preventing unreviewed code from accumulating.</td></tr>
+<tr><td>Running the job on the laptop</td><td>Macs sleep. Scheduling is fiddly. Failures are silent.</td></tr>
+<tr><td>Linting tickets inside the run</td><td>Defeats the point. The whole value of the lint pass is that the human is awake to answer.</td></tr>
+<tr><td>Stacking multiple design skills</td><td>Two opinionated rulebooks produce two competing sets of instructions in the same context.</td></tr>
+<tr><td>A separate messaging bot for dispatch</td><td>Machinery solving a problem the scheduler and the mobile app already solve.</td></tr>
+</table>
+
+<h2>Honest limitations</h2>
+
+<h3>The bottleneck is specification, not intelligence</h3>
+<p>Bad runs almost always trace to a vague ticket rather than an agent failure. During the shakedown, two test tickets were written without first checking the codebase: one asked for work already done, the other assumed a screen that didn't exist. Both were caught — one by the lint pass, one by the Builder — but each cost a cycle. The person writing tickets is the limiting factor.</p>
+
+<h3>Review decay is the real risk</h3>
+<p>The failure mode isn't a dramatic bad merge. It's the slow slide into approving without looking. The tell is simple: if you can't answer "what did I merge yesterday?", the gate has already stopped working.</p>
+
+<h3>The platform is a research preview</h3>
+<p>Scheduled cloud agents are new. Run caps, trigger behaviour and network restrictions have all shifted during setup. Several assumptions in the original design turned out to be wrong when tested — which is why the system now prefers running a cheap diagnostic over trusting documentation.</p>
+
+<h3>Design distinctiveness needs grounding</h3>
+<p>Design skills move a model off the centre of the distribution, but they supply no picture of what <em>this</em> app should look like. That requires reference material chosen by a human. Skills alone produce generic-but-slightly-better.</p>
+
+<div class="serif-note">What makes this system interesting is not that AI writes the code. It is that the arrangement makes an unsupervised agent's mistakes cheap, visible and reversible — a queue it cannot jump, a gate it cannot open, and a written record of every judgement it made while nobody was watching.</div>
+
+</body></html>
