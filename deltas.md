@@ -214,3 +214,24 @@ read-only archive of everything logged before the split. Orchestrator prompt §7
 
 **Carry-forward for any new app:** create `decisions/` at scaffold time. Do not start a shared
 append-only log in a pipeline that runs branches concurrently.
+
+
+---
+
+# D7 — Two open unknowns resolved on the 11 Aug wave-B run (#10, #15)
+
+**The GitHub App CAN push `.github/workflows/`.** Ticket #10 added
+`.github/workflows/scheduled-jobs.yml` on a `claude/` branch and the push was accepted. The
+`workflows` permission is present. This was flagged as the most likely failure mode for #10 and
+for every future workflow ticket; it is now a closed question. Stop carrying the caveat.
+
+**Both D6 fixes held on their first real run.** Two Builders, two tickets, no branch
+contamination in the log, and `decisions/ticket-10.md` and `decisions/ticket-15.md` were created
+as separate files with root `decisions.md` untouched — so the re-pasted orchestrator prompt took
+effect and the per-ticket split works as designed. No merge conflict on either PR.
+
+**Carry-forward, unresolved.** The `decisions.md` collision class is fixed, but the *shape* of it
+recurs for any file two tickets in one batch both append to. Wave C (#11 and #12) both add a step
+to `.github/workflows/scheduled-jobs.yml` and will collide the same way. Ticket #12 now carries an
+explicit DoD item requiring both steps to survive the merge. **When scoping a batch, check whether
+the two tickets append to the same file** — not just whether they depend on each other.
