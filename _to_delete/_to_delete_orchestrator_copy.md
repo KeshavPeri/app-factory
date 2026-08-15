@@ -1,21 +1,11 @@
-v0.5 — hardened in Phase 4; labels replaced the board in Phase 5; corrected from the Phase 6 smoke run; revised at Phase 8; **batch limit raised from 2 to 3 on 16 Aug 2026**
+v0.4 — hardened in Phase 4; labels replaced the board in Phase 5; corrected from the Phase 6 smoke run; revised at Phase 8
 
 # Orchestrator routine prompt
 
 This is the literal prompt to paste into the Claude Code Routine (Task 5.2). The routine's
 top-level session *is* the orchestrator — there is no separate orchestrator agent (§4.2). It
 runs autonomously with no mid-run permission prompts, so the issue tracker is the only
-escalation channel. Batch limit: **3 tickets per run**. Revision cap: 2 per ticket.
-
-**What changed in v0.5.** The batch limit went from 2 to 3, after four clean multi-ticket runs in
-which worktree isolation held and the per-ticket decisions files never collided. Three raises two
-risks worth naming: **quota**, since three tickets means roughly half again as many subagent
-dispatches on one subscription — a run that exhausts quota mid-ticket is recoverable, because the
-next run's stale-ticket recovery (step 2) picks it up, but it is not free; and **merge-order
-coupling**, since three concurrent branches all fork from the same `main` and any two that touch the
-same file will conflict at merge even though neither depends on the other. Step 8 now requires the
-end-of-run note to flag that. Also tightened: step 7 now says explicitly that the Builder does not
-write the decisions file, after a run in which Builders wrote their own.
+escalation channel. Batch limit: 2 tickets per run. Revision cap: 2 per ticket.
 
 **What changed in v0.3, and why.** A cloud routine cannot reach a GitHub project board: the
 GitHub proxy blocks GraphQL outright and restricts REST to repository-scoped paths, and
@@ -100,22 +90,12 @@ you expect the tracker to be clean.
 
 Now read `CLAUDE.md`, `escalation.md`, and the product brief (`product-brief.md`).
 
-Take up to **3 tickets** from the `status:ready` set, **in ascending issue number** — lowest
-open number first. That ordering is the whole priority mechanism; there is no other. The batch
-limit exists because several tickets in one run beat the same tickets across several runs: every
-fresh session pays a fixed overhead re-reading the tracker, brief and repo, and that overhead is
-paid once per run rather than once per ticket.
+Take up to **2 tickets** from the `status:ready` set, **in ascending issue number** — lowest
+open number first. That ordering is the whole priority mechanism; there is no other. Batch
+limit is 2 because two tickets in one run beats one ticket in two runs: every fresh session
+pays a fixed overhead re-reading the tracker, brief and repo.
 
 Set each to `status:in-progress` as you start it.
-
-**Before dispatching, read the three tickets' scope constraints against each other and note any
-file named by more than one.** You are not to re-scope a ticket or drop it over this — Keshav
-queued them deliberately, and a shared file is not an error. But all three branches fork from the
-same `main`, so two tickets touching one file will conflict when the second PR is merged, no matter
-that neither depends on the other. **Carry any overlap into the end-of-run note (step 8)** so the
-merge order is a decision Keshav makes with the information, rather than a conflict he discovers.
-If a ticket's scope constraint is absent or too vague to compare, say that in the note too — that is
-a ticket-authoring gap worth knowing about.
 
 ## 4. Build loop (per ticket)
 
@@ -208,15 +188,6 @@ and branch name.
 at the end of the run.** One file per ticket, created by you on that ticket's own branch, with
 two headings inside it: `HIGH-IMPACT` and `ROUTINE`.
 
-**You write this file. The Builder does not, and neither does QA.** This is not bookkeeping
-pedantry: the value of the log is that entries are written *at the moment the decision is taken*,
-by the agent that mediated it. A Builder writing its own file at the end of its pass is
-reconstructing from memory after the fact, which is the exact failure the "never compiled at the
-end" rule exists to prevent — and it produces a log that reads correctly while having lost whatever
-the Builder no longer remembered. Observed on 15 Aug 2026, both tickets, content accurate but the
-mechanism wrong. If a Builder reports having written its own decisions file, **note it in the
-end-of-run summary** rather than silently accepting it.
-
 **Never write to `decisions.md` in the repo root.** As of 11 Aug 2026 that file is a read-only
 archive of everything logged before that date. Two tickets in one batch both appending to it
 produced a merge conflict at the identical insertion point, and will on every 2-ticket run:
@@ -266,17 +237,3 @@ loose — don't just keep logging.
 Post a short summary note: tickets completed (with PR links), tickets blocked (with their
 one-line questions), decisions logged, and anything that failed in a way the labels don't show.
 One glance from a phone should tell Keshav what happened tonight.
-
-Three things belong in that note whenever they apply, because nothing else surfaces them:
-
-- **Any file named in more than one of this batch's scope constraints** (step 3), with a suggested
-  merge order. Two branches touching one file conflict on the second merge regardless of whether
-  the tickets depended on each other.
-- **Any scope deviation a Builder flagged** — a file changed that its ticket's constraint did not
-  list. A Builder that steps outside the lines *and says so* is the mechanism working; the note is
-  where that reaches Keshav. Say which file, and which definition-of-done item forced it.
-- **Any subagent that wrote a file this prompt assigns to you**, per step 7.
-
-If quota or time ran out mid-batch, say which tickets were left `status:in-progress` and state
-plainly that the next run's stale-ticket recovery will pick them up. An unfinished ticket named in
-the note is a known state; an unfinished ticket nobody mentions looks like a crash.
