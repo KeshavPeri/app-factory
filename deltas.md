@@ -276,3 +276,56 @@ in a ticket.
 **Carry-forward for every new app.** Any ticket that creates a Supabase table must require
 `GRANT`s in the same migration file, as a definition-of-done item, not as an assumption. Added
 to `assets/new-app-kickoff.md` Part 3.
+
+
+---
+
+# D9 — Cross-season id instability is not just a player problem. It repeats at every level.
+
+Found 15 Aug 2026 while linting the feature-list item 10 ticket, before anything read the affected
+column. Not observed as a failure — observed by reading the code and then checking the source data.
+
+**The finding.** `scripts/ingest-core-insights.ts` upserted full team rows into `public.teams` with
+`onConflict: 'id'`, from the **2025-2026** season file. FPL team ids are re-assigned every season
+along with the promoted and relegated clubs. Fetching both season files from the source and diffing
+them:
+
+```
+https://raw.githubusercontent.com/olbauday/FPL-Core-Insights/main/data/2025-2026/teams.csv
+https://raw.githubusercontent.com/olbauday/FPL-Core-Insights/main/data/2026-2027/teams.csv
+```
+
+**Only 5 of 20 team ids referred to the same club in both seasons.** Id 3 was Burnley, is now
+Bournemouth. Id 12 was Liverpool, is now Ipswich Town. Id 13 was Man City, is now Leeds. `teams.code`
+is stable: all 17 clubs present in both files carry the same `code` *and* the same `elo` in both.
+
+**Why it stayed silent.** `scripts/ingest-fpl.ts` runs after the core-insights job in the same
+workflow and upserts the same table on the same key, so `name`, `short_name` and the `strength_*`
+columns ended up correct — the FPL ingest overwrote them last. But `elo` is written *only* by the
+core-insights job and is never overwritten, because `bootstrap-static/` has no elo field. So the
+live table carried the right names against the wrong ratings for roughly fifteen clubs, and no
+consumer existed yet to notice.
+
+**The generalisation, and the actual lesson.** #12 and #22 established "FPL element ids are not
+stable across seasons; `code` is." That finding was then applied to **players and only to players**.
+The identical property holds for teams, and would hold for any other entity a per-season source
+re-keys. Fixing the instance is not the same as fixing the class.
+
+**Carry-forward for every new app.** When a source is per-season, per-year, or per-any-epoch:
+
+- **Enumerate every entity it keys**, not just the one that produced a visible bug, and check each
+  for a stable identifier before writing an upsert conflict target.
+- **A silent column is the dangerous one.** The corruption here survived precisely because a second
+  job repaired every column *except* the one nothing read yet. A column with no consumer has no
+  error path — it is wrong until the first consumer is built, and then it is wrong in production.
+- **One writer per table column-set.** The root cause was two jobs upserting the same table on the
+  same key with different notions of what the key means. Team identity now belongs to
+  `scripts/ingest-fpl.ts` alone; the historical-season job contributes `elo` and nothing else,
+  matched on `code`.
+
+**Also worth carrying:** the FPL-Core-Insights **2026-2027** directory now exists (it 404'd when
+ticket #12 was written, which is why that job treats a missing season directory as a normal state).
+Do not switch the ingest to it — that season has no played matches, and `player_match_stats` needs a
+played season for the defcon and xG-rate estimators to have anything to estimate from. The
+historical season is the point, and the season identifier being configurable is what makes both
+true at once.
