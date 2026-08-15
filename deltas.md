@@ -329,3 +329,54 @@ Do not switch the ingest to it — that season has no played matches, and `playe
 played season for the defcon and xG-rate estimators to have anything to estimate from. The
 historical season is the point, and the season identifier being configurable is what makes both
 true at once.
+
+
+---
+
+# D10 — An enumerated file-scope list becomes a contradiction the first time a ticket crosses a module boundary
+
+Observed 15 Aug 2026 on the fpl-advisor run that built issues #32 and #33.
+
+**What happened.** Ticket #33 (the baseline projection model) carried both of these, as written:
+
+- a DoD item requiring the job to **import** the pure defcon estimator from `src/lib/projection/`
+  rather than reimplement it, and
+- a scope constraint enumerating the exact files that may change — which did not include
+  `tsconfig.scripts.json`.
+
+`src/lib/` uses `.ts`-extension imports, so `tsc -b` fails the moment a `scripts/*.ts` job imports
+from it unless `allowImportingTsExtensions` is `true`. This was the first job in the repo to make
+that crossing. **No implementation could satisfy both items.** The only literal-scope-compliant
+option — duplicating the logic — was explicitly forbidden by the same ticket.
+
+**The pipeline handled it correctly, and that is the reassuring half.** The Builder flipped the one
+line, flagged the deviation rather than burying it, and proved by revert experiment that the build
+genuinely fails without it. QA reproduced the experiment independently. The orchestrator declined to
+rule on it and routed it to the Analyst, which classified it Tier 2 — decide, proceed, log loudly —
+and it was logged with a full *because* in `decisions/ticket-33.md` and surfaced at the top of the
+PR body. Total human cost: one paragraph to read.
+
+**The fault was in the ticket, not the run.** This is the same shape as the four specification
+defects in `LEARNINGS-first-build-wave.md` §2 — a DoD no correct implementation can fully meet —
+but a new instance of it, and one that is easy to reproduce because the scope-constraint pattern is
+otherwise the single most useful thing in a ticket (§8 ranks it second only to grep-checkable DoD
+items).
+
+**Carry-forward for every new app.**
+
+- **A scope constraint that enumerates files is a claim about the build, not just about the diff.**
+  Before writing one, ask: is this ticket the first to import across a module boundary, add a
+  dependency, change a compilation target, or touch anything the build reads? If so, name the
+  config file in the scope list, or the constraint and the DoD will contradict each other.
+- **Prefer "nothing outside X changes, except build configuration required by this ticket's own
+  imports, which must be logged as a decision"** over a bare file list, on any ticket that is the
+  first of its kind.
+- **Do not treat a flagged scope deviation as a red flag on the code.** A Builder that changes a
+  file outside the list *and says so loudly* is the mechanism working. The thing to fear is the one
+  that silently duplicates logic to stay inside the lines — which produces a clean-looking diff and
+  a second copy of a rule that will drift.
+
+**Second-order effect worth catching.** Once the boundary is crossed, any existing comment stating
+the old convention becomes actively misleading — `scripts/sync-squad.ts` carried a paragraph
+explaining why `scripts/` duplicates rather than imports. Left alone it would have taught the next
+Builder to copy. Corrected in the same pass, with the new rule written into `CLAUDE.md`.
