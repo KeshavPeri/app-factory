@@ -19,7 +19,7 @@ Part 1's output is Part 2's input. Both chats get this same file.
 ## The system in one paragraph
 
 Keshav has a semi-autonomous pipeline. He writes tickets as GitHub issues and labels the ones he
-wants built. A scheduled cloud agent fires nightly at 2am, picks up to **three** tickets, and
+wants built. A scheduled cloud agent fires nightly at 2am, picks up to **two** tickets, and
 dispatches three subagents: an **Analyst** (holds the product brief, classifies risk), a
 **Builder** (writes code), and a **QA** (tests against the ticket's definition of done and writes
 the review packet). It opens a draft pull request with a live preview link. In the morning he
@@ -56,23 +56,9 @@ always comes back as CANNOT VERIFY and lands in Keshav's own to-check list. That
 honest — just know that writing a DoD entirely out of device-level items means nothing gets
 verified.
 
-**5. Up to three tickets per night, in ascending issue number.** Issue creation order *is* build
-order. There is no priority field. So sequencing is a real design decision: ticket 4 cannot assume
-ticket 9 exists.
-
-Two consequences of a multi-ticket batch that a brief or a ticket must anticipate:
-
-- **Tickets in one batch all build against the same `main`.** A ticket may only sit alongside
-  another if neither depends on the other *and neither depends on the other's merge*. Merging is
-  manual, so "it'll be there by then" is never true within a night.
-- **Check whether two tickets in a batch write to the same file**, not just whether they depend on
-  each other. Two branches touching one file conflict on the second merge even when the tickets are
-  functionally independent. This has happened twice — see `deltas.md` D6b and D7. A scope constraint
-  naming exact file paths is what makes it checkable in advance.
-
-The number itself lives in the app's own `CLAUDE.md`, which is the binding copy. The routine's saved
-prompt holds a second copy that only changes when the prompt is re-pasted into its Instructions box,
-so the two drift; when they disagree, `CLAUDE.md` wins and the run says so in its end-of-run note.
+**5. Two tickets per night, in ascending issue number.** Issue creation order *is* build order.
+There is no priority field. So sequencing is a real design decision: ticket 4 cannot assume ticket
+9 exists.
 
 ## The three escalation tiers
 

@@ -380,3 +380,36 @@ items).
 the old convention becomes actively misleading — `scripts/sync-squad.ts` carried a paragraph
 explaining why `scripts/` duplicates rather than imports. Left alone it would have taught the next
 Builder to copy. Corrected in the same pass, with the new rule written into `CLAUDE.md`.
+
+
+## D10, second instance — the scope list can contradict the ticket's own Notes, not just its DoD
+
+Observed 16 Aug 2026 on the solver-integration ticket, and reported by QA as a non-blocking
+observation rather than silently resolved — which is the behaviour the pipeline wants.
+
+The ticket's **Notes** section instructed the Builder to record a limitation in
+`docs/projection-model-backlog.md`. The ticket's **scope constraint** enumerated the files that may
+change and did not list that file. Same contradiction as the original D10, from the other direction:
+the first instance was DoD-versus-scope, this one is Notes-versus-scope.
+
+**This is the more insidious of the two**, because a Notes instruction reads as advisory. A Builder
+that follows it violates a hard constraint; a Builder that respects the constraint silently drops an
+instruction the ticket author thought had been given. Neither outcome is visible unless someone
+diffs the two sections against each other by hand.
+
+**The rule, generalised.** A ticket's scope constraint must be checked against **every other section
+of the same ticket**, not just the definition of done. Concretely, before a ticket is filed:
+
+- Take every file path named anywhere in Context, Scope, DoD or Notes.
+- Take every file the ticket *implies* — the decisions log, a documentation file it asks to be
+  updated, a build config an instructed import requires.
+- Confirm each one is either in the scope list or explicitly named as out of scope.
+
+Cheaper still: **the scope constraint should be written last**, after the rest of the ticket exists,
+by reading back over it. Writing it early — while the ticket is still a sketch — is what produces
+both instances of this defect.
+
+**Carry-forward for the ticket template.** `assets/ticket-template.md` should say that the scope
+constraint is derived from the finished ticket rather than drafted alongside it, and that a Builder
+finding a genuine contradiction should report it rather than pick a side. Both times the pipeline
+reported it correctly; both times the fault was upstream, at drafting.
