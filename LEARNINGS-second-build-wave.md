@@ -215,3 +215,75 @@ in this wave was found by a person looking at a number and thinking "that can't 
 1,000, a 54, a 95%, a 280, a 101. No test caught any of them, because tests assert that code does
 what code does. **The instinct that a number is implausible is the one thing in this system that
 cannot be automated**, and it turned out to be the most valuable input the human provided.
+
+---
+
+## 10. Not every ticket is worth a night — added 29 Aug 2026
+
+The overnight pipeline costs two things that are easy to forget: **a night of latency, and one of
+three batch slots.** Both are worth paying when the specification is the hard part. Neither is worth
+paying when the change is small, the file is one, and the tests already exist.
+
+**The rule that emerged, stated as a test rather than a list:** *is writing the ticket harder than
+making the change?* If yes, use the pipeline — that is exactly what it is for, and §9's framing holds
+(the human writes specifications, the machine writes code). If no, fix it directly in an interactive
+session and keep the slot for work that needs a spec.
+
+**What "small" actually means here**, from the case that produced this note — a solver-log parser
+whose cross-check was reading the wrong solution index:
+
+- One module, and a pure one.
+- A defect already diagnosed, with the mechanism written down and the evidence attached.
+- Fixtures that exist as captured artefacts, not ones that have to be invented.
+- A test suite that already covers the surrounding behaviour, so a regression is visible.
+
+**Write the ticket either way.** The ticket is what makes the fix reviewable and what keeps the
+decisions log continuous; it is the *dispatch* that is optional, not the specification. An
+interactive fix still branches under `claude/`, still writes `decisions/ticket-<n>.md`, and still
+gets read before merge.
+
+**The counter-lesson, and it is the one that stings.** This particular parser took three attempts —
+not because the change was hard, but because each ticket was specified against the cases its author
+could imagine rather than the ones already captured in an artefact. The first covered only a
+chip-enabled log; the second added the chip-free case but asserted only that a *disagreement* fails
+and that an *empty* log agrees, never that a *populated* log agrees with itself. **Test the passing
+case first. The failing cases are the easy half**, and a check that can never pass looks exactly like
+a check that is working.
+
+---
+
+## 11. A batch can be file-disjoint and still break the build — added 29 Aug 2026
+
+`deltas.md` D6b, D7 and §5 above all warn about the same thing: two tickets in one batch touching
+one file conflict on the second merge. The scope constraint that names exact file paths is the
+defence, and it works.
+
+**It does not defend against a shared *type*.** Two tickets merged the same night: one taught the
+solver-log parser to read the sell and buy columns, which meant adding two fields to the
+`SolverSolution` type it exports. The other wrote a new job whose tests construct `SolverSolution`
+literals. **Different files, no overlap, both branches green, both test suites passing** — and
+`tsc -b` failed on `main` the moment the second one merged, with 24 errors in a file neither ticket
+had touched together.
+
+**Worse, the ticket had been told to stay away from the file that would have surfaced it.** Its
+Notes said, in as many words: *do not edit the parser, even though you depend on its fix.* That
+instruction was right about the diff and wrong about the build.
+
+**The rule, generalised.** A scope constraint is a claim about the *diff*. `tsc -b` is a claim about
+the *program*. When one ticket in a batch changes an exported type, interface or function signature
+that another ticket consumes, they are coupled no matter how disjoint their file lists are.
+
+**What to do at queue time**, and it is cheap:
+
+- For each ticket in the batch, ask **what it exports that another ticket imports** — not what files
+  it touches. A ticket that widens a type is a ticket every consumer depends on.
+- If two tickets in a batch are on either side of that line, **either sequence them across two
+  nights, or put the type change and its consumers in the same ticket.** Do not batch them and hope.
+- The tell is a Notes line reading *"depends on the fix in the other ticket"*. That sentence is the
+  coupling, written down, and it should stop the batch rather than reassure the reader.
+
+**Cost when it happens: low, and visible immediately** — a red `main` build, a failing Vercel
+deploy, and a five-minute test-literal fix. **The danger is not the breakage, it is the delay**: the
+production deploy stayed red for four hours before anyone looked, and every PR preview URL in that
+window would have been stale. Check `main` is green after a multi-ticket merge, before reading
+anything from the deployed app.
