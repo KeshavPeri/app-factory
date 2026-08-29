@@ -287,3 +287,180 @@ deploy, and a five-minute test-literal fix. **The danger is not the breakage, it
 production deploy stayed red for four hours before anyone looked, and every PR preview URL in that
 window would have been stale. Check `main` is green after a multi-ticket merge, before reading
 anything from the deployed app.
+
+---
+
+## 12. The class fix that was only an instance fix, again — added 29 Aug 2026
+
+**§4 said "fixing the instance is not fixing the class". Here is the fourth instance, and it is
+the most expensive one so far.**
+
+Ticket #43 was written because a job's own counter read exactly 1,000 — a round number, spotted by
+eye. The finding was real: **Supabase silently caps a query at 1,000 rows.** The fix was a shared
+helper, `scripts/lib/paginate.ts`, which pages with `.range(from, to)` and then asserts the total
+against an independent count query. That helper has been used at roughly 25 call sites since. It
+is good code and it was reviewed and it works.
+
+**It solved truncation. It did not solve ordering.**
+
+Postgres gives no stable row order between separate queries without an `ORDER BY`. Paging a
+13,000-row table in chunks of 1,000 issues fourteen separate queries. Between any two of them the
+server is free to return rows in a different order — so one row comes back on two pages and
+another never comes back at all.
+
+**The count assertion passes anyway.** One row duplicated and one row dropped leaves the total
+unchanged. The single guard built specifically to catch a bad paginated read is structurally
+blind to this failure.
+
+It surfaced as a preflight FAIL saying a player had 39 matches in a 38-match season. The database
+had 38. Roughly 18 of the 25 call sites pass no ordering, including the backtest's 19-page read of
+`feature_history` and the calibration report's read of `player_match_stats`.
+
+**Every multi-page read in the project has been quietly duplicating and dropping rows, for weeks,
+including the reads that produce the numbers used to judge the model.**
+
+**The generalisable lesson, and it is about how the fix was scoped, not about SQL.** The bug found
+was "this read was truncated". The class was "reads that exceed one page". Truncation is one
+failure mode of that class; **non-determinism is another, and nobody enumerated the class's failure
+modes — the fix was written against the symptom that happened to be observed.**
+
+**What to do differently:** when a ticket introduces a shared helper for a class of operation, ask
+*what else can go wrong with this class of operation* before the helper ships, and encode the
+answers as things the helper **refuses** rather than things each caller must remember. A helper
+that accepts a page request with no ordering is a helper that requires 25 authors to independently
+remember an invariant. The fix is not 25 `.order()` calls; it is `paginate.ts` rejecting a call
+that has none.
+
+**Cost: unknown and unbounded, which is the worst kind.** Every measurement taken since #43 is
+approximately right and not reproducible.
+
+---
+
+## 13. A metric without a baseline is not a measurement — added 29 Aug 2026
+
+Ticket #147 added Spearman rank correlation and top-N overlap to the backtest. It shipped
+correctly, tested, with sanity bounds. It produced **0.289**.
+
+**Nobody can say whether 0.289 is good.**
+
+The ticket — written by the orchestrator — specified an **absolute** expectation band, "0.3 to
+0.6 is what a real, useful, imperfect model looks like", with **no comparator**. That band was
+invented from general intuition about regression models, not derived from anything about weekly
+FPL scoring. Predicting a single gameweek is largely predicting who scores a goal. The ceiling may
+be near 0.3. The number is uninterpretable in either direction.
+
+**The ticket should have required a baseline in the same run**: rank by price, rank by last
+season's points per game, rank by a constant. A model that beats a naive benchmark has skill; a
+model that does not is decoration. **That comparison costs almost nothing to compute and is the
+only thing that makes the primary number mean anything.**
+
+**The rule: any ticket that introduces a new evaluation metric must ship a baseline against which
+that metric is read.** An absolute threshold asserted by the ticket author is a guess wearing the
+costume of a specification — and because it is written in the definition of done, it is a guess
+that the QA agent, the reviewer and the human all treat as established fact.
+
+---
+
+## 14. A sanity bound checked at the aggregate does not protect the breakdown — added 29 Aug 2026
+
+Ticket #147 specified an upper bound as a leak alarm: **top-10 overlap above 90% fails the
+report.** The reasoning was sound — a suspiciously good ranking is what lookahead contamination
+looks like.
+
+The report it produced contains **"Goalkeeper: 615 of 615 (100.0%)"** and passed.
+
+Two independent defects, both in the same table:
+
+1. **The bound is applied to the season aggregate only.** The by-position breakdown, added in the
+   same ticket, is not bounded at all. A guard written to catch exactly this shape did not look
+   where the shape appeared.
+2. **A top-N metric is meaningless when the population is smaller than N.** There are about 16
+   goalkeepers in a gameweek's measured population. "How many of the top 20 are in the top 20"
+   over 16 rows is 100% by arithmetic. Forwards' 80.7% is the same artifact at lower resolution.
+
+**The rules:** a sanity bound must be applied at **every level of aggregation the report prints**,
+not only the headline — if a number is worth printing it is worth bounding. And **a top-N metric
+must cap N at the population**, or refuse to report, exactly as the same ticket already does for
+gameweeks with fewer than 50 rows. **That "too small to read" discipline existed in the ticket and
+was applied to one axis and not the other.**
+
+---
+
+## 15. Storing data and consuming it are two tickets, and the human check must say so — added 29 Aug 2026
+
+Ticket #146 added three columns to `feature_history` to fix two named defects: a defcon hit rate
+that cannot be recovered from cumulative totals, and a 23% backtest exclusion caused by joining to
+a live table that only holds the current season's players. The ticket delivered exactly that.
+Rebuild verified: 18,246 rows, 100% coverage, implied hit rate 0.195.
+
+**And the backtest run afterwards showed the defcon error unchanged at −0.191 and the exclusion
+unchanged at 23%** — because `run-backtest.ts` was explicitly out of scope and still reads neither
+column.
+
+That is correct behaviour and a correctly scoped ticket. **The problem is that the ticket's human
+check did not say so.** It read: *"apply the migration, rebuild the season, and confirm
+element_type is non-null on every row"* — true, checkable, passed — while sitting inside a ticket
+whose stated purpose was fixing two visible defects that the check would not move.
+
+The orchestrator caught this in conversation and warned before the run. **It should have been in
+the ticket.**
+
+**The rule: when a ticket builds a substrate that a later ticket consumes, the definition of done
+must state what will NOT change, and name the follow-up.** Otherwise the human reads the next
+report, sees the defect he was told this ticket addresses still sitting there, and reasonably
+concludes the build failed. **A ticket that fixes a cause without fixing a symptom must say which
+symptom will survive it.**
+
+---
+
+## 16. Where the pipeline itself is structurally blind — added 29 Aug 2026
+
+Written for the "about the system" document. These are not ticket defects; they are properties of
+the App Factory as currently designed.
+
+**a. The scope constraint that makes batching safe also guarantees class-level bugs survive.**
+This is the sharpest tension in the system. A scope constraint names exact file paths, and that is
+precisely what lets three tickets run overnight without colliding (§5, §11). But it also means
+**no agent in the loop is ever permitted to ask "does this same mistake exist elsewhere in the
+repo?"** — asking would be out of scope, and answering would break the batch. Every fix is local
+by construction. §12's pagination bug lived at 18 call sites for weeks with a well-reviewed helper
+sitting in the middle of them. **The pipeline cannot produce a class fix unless a human writes a
+ticket that asks for one**, which means the orchestrator must periodically go looking for classes.
+Consider a standing "audit ticket" slot — one night in five spent on a single question of the form
+*"find every place in this repo that does X"* — run alone, since a repo-wide sweep cannot be
+scope-constrained.
+
+**b. QA reviews the diff; nothing reviews the program.** §11 recorded the type-collision case.
+§12 is the same blindness on a longer timescale. The QA agent sees one ticket's changes against
+one ticket's stated scope. **There is no role that reads the whole codebase and no artifact that
+accumulates cross-cutting invariants.** `deltas.md` and the learnings files are the closest thing,
+and they are read by the orchestrator, not by the agents.
+
+**c. There is no distinct review for measurement code, and there should be.** §3 established that
+a wrong instrument is the most expensive kind of wrong. Since then the project has shipped a
+calibration report, a backtest harness, a preflight check, a prediction log and a ranking module —
+**five instruments, all reviewed exactly like feature code.** §13 and §14 are both instrument
+defects that passed QA cleanly. An instrument should have to answer three extra questions before
+merge: *what is the baseline, what would a broken version of this look like, and is the guard
+checked at every level this thing prints?*
+
+**d. The human checks in a ticket are written by the orchestrator and verified by nobody.** They
+are the most trusted lines in the whole ticket — the QA agent cannot evaluate them, the Builder
+treats them as out of scope, and the human treats them as authoritative because they arrived in a
+specification. **§13's invented 0.3–0.6 band is exactly this failure**: a guess became a fact
+because of where it was written. The orchestrator should mark any human check derived from
+judgement rather than from the codebase, in the ticket, as a guess.
+
+**e. `feature-list.md` drifts within days and nothing notices.** The v2.0 list was eight days old
+at handover and wrong about six items. **This is what caused the human to twice ask "are these
+tickets even on the feature list?"** — a fair challenge that the orchestrator could not answer
+confidently because the list had stopped tracking reality. **A merged ticket should update the
+feature list in the same PR**, the way it already updates `decisions.md` and `supabase/README.md`.
+The list is the only artifact that answers "are we building the product or just fixing things",
+and it is the one nothing keeps current.
+
+**f. The overnight batch is the wrong shape for a certain size of work, and §10 only half-solved
+it.** §10 established that small fixes can go to an interactive session. The other end is also
+true: **a repo-wide sweep, a class fix, or an instrument rebuild does not fit in a three-ticket
+file-disjoint batch either.** The system is well-tuned for medium work and has no mode for either
+extreme.
