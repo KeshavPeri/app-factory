@@ -464,3 +464,111 @@ it.** §10 established that small fixes can go to an interactive session. The ot
 true: **a repo-wide sweep, a class fix, or an instrument rebuild does not fit in a three-ticket
 file-disjoint batch either.** The system is well-tuned for medium work and has no mode for either
 extreme.
+
+---
+
+## 17. The pipeline cannot catch a wrong diagnosis, only a wrong implementation — added 3 Sept 2026
+
+**The most expensive ticket of this wave was implemented perfectly.**
+
+Ticket 89 (issue `#192`) asserted that the backtest's five-gameweek quality oracle was
+mis-specified in *units* — that it estimated a per-match rate while being scored against a totals
+target — and that fixing the units would restore the expected ordering (oracle above model). The
+Analyst accepted it, the Builder implemented it faithfully and well (a new
+`computeOracleFeaturedRate × computeOracleAppearanceRate` construction, leak-guarded identically to
+the existing rate oracle, fully tested), and QA passed it.
+
+The oracle moved from **0.507 to 0.506**.
+
+The real defect was on the model side and had nothing to do with the oracle:
+`projectAndReconstructWindowGameweek` keyed **three** point-in-time lookups — the feature-history
+row, the team-strength computation, and the position prior — on each *leg's* gameweek `G+i` rather
+than the window's start gameweek `G`. The five-gameweek "projection" was five one-week-ahead
+projections built with information that did not exist when the app would have planned. A hindsight
+oracle scored below the model because the model was reading inside the target window.
+
+**The general failure.** Every gate in this pipeline — Analyst, Builder, QA, the scope constraint,
+the definition of done — verifies that the ticket was *implemented as written*. **Nothing checks
+whether the ticket's premise was true.** A confidently wrong orchestrator diagnosis converts
+directly into a wasted night, and the more precisely the ticket is specified, the more efficiently
+the pipeline executes the wrong thing.
+
+**It also propagated.** Ticket 92, batched the same night, wrote the wrong cause into
+`docs/projection-model-backlog.md` as G13 — so the mistaken diagnosis was durably recorded in the
+project's own institutional memory, by a ticket whose entire purpose was to record settled facts.
+**A documentation ticket batched alongside the ticket whose findings it records will faithfully
+transcribe that ticket's errors.** Do not batch them together; let the finding land and be read
+first.
+
+**Carry-forward — the falsification check.** A ticket whose premise is a *causal claim about a
+measured number* should carry, in its definition of done, a figure that **must move if the
+diagnosis is right**, and an explicit instruction to **stop and report rather than merge** if it
+does not. Ticket 89 had this in spirit — "the oracle must sit above the model at both horizons" —
+but it shipped as a runtime assertion inside the harness rather than a build-time stop. The result:
+the wrong fix merged cleanly and the nightly job simply began failing. The check was right; its
+placement made it a post-merge alarm instead of a pre-merge gate.
+
+---
+
+## 18. Instrument defects have now outnumbered model defects for two consecutive waves — added 3 Sept 2026
+
+§3 established that a measuring instrument can be wrong and that it is the most expensive kind of
+wrong. Two waves on, the tally is no longer anecdotal. From the 2–3 September sessions alone:
+
+| Surprising number | Cause | Instrument or model? |
+|---|---|---|
+| Defcon captured only 27% of actual | harness fed one averaged match, capping own-evidence at 1 against `k=5` | instrument (`#154`) |
+| Goalkeeper appearance projected 1.42x | calibration report compared different populations | instrument (`#155`) |
+| MID/FWD lost to a naive minutes baseline | harness used a single averaged match, not the live five-match window | instrument |
+| Forward assists stuck at 0.70x after three fixes | report compares 2026/27 projections against 2025/26 actuals; the population difference is itself assist-shaped | instrument |
+| Model beat its own hindsight oracle | three lookahead lookups in the five-gameweek construction | instrument |
+| `attackingMultiplier` twice too steep | genuinely the model | **model** (`#184`) |
+
+**Five to one.** And in every instrument case the first hypothesis raised — by the orchestrator, in
+writing — was a model defect.
+
+**Carry-forward.** When a measured number moves in a surprising direction, **the default hypothesis
+is that the instrument changed**, and the ticket should be written to test that before proposing a
+model change. Concretely: before writing a ticket that tunes a constant, name what changed in the
+harness, the report, or the population since the last reading, and say why it is not the cause.
+The model review reached this conclusion independently and stated it in its summary; the pipeline
+has still not absorbed it into how tickets get written.
+
+**Corollary worth stating separately.** Ticket 89 made the leak *worse* — the five-gameweek Spearman
+rose 0.672 → 0.728 — because it fed the harness a genuinely better minutes signal, and minutes
+carry roughly 85% of the model's ranking signal. **Improving an input to a leaking construction
+makes the leak larger, and the number gets better-looking as the measurement gets more wrong.**
+Any metric that improves after an unrelated fidelity improvement deserves suspicion, not
+celebration.
+
+---
+
+## 19. Three smaller findings — added 3 Sept 2026
+
+**a. Draft numbers, issue numbers and in-code ticket references have diverged three ways.**
+Ticket drafts `89`, `91` and `92` became GitHub issues `#192`, `#191` and `#190` — reversed by
+creation order — and the Builder wrote `#187` into the source comments for the oracle work. Three
+numbering spaces, none reconciled. Tracing a code comment back to the ticket that caused it now
+requires guessing. **Carry-forward: the ticket body should state its own draft number, and the
+Builder should be required to cite the GitHub issue number it was dispatched with, not a number of
+its own choosing.**
+
+**b. No part of this system can verify an external data format, including the orchestrator.**
+Writing a ClubElo ingest ticket required seeing one response. `api.clubelo.com` was unreachable from
+the cloud container (egress allowlist), from the device VM (same allowlist), and from WebFetch
+(robots.txt), and when the human ran `curl` himself the host returned HTTP 502 on every endpoint —
+its own outage. The standing rule from `LEARNINGS-first-build-wave.md` §5 (never assert an external
+format you have not seen) held and correctly blocked the ticket. But the consequence is structural:
+**any ticket touching a new external source is permanently gated on a human running a command.**
+Worth an explicit decision — either accept that gate, or maintain the environment's custom network
+allowlist (`deltas.md` D4) proactively for sources the roadmap already names.
+
+**c. A pre-registered acceptance criterion was set aside within a day of being set.** Ticket 91's
+definition of done said: if any position's appearance ratio moves *away* from 1.00, revert rather
+than tune. Three of four did. The orchestrator recommended deferring the decision until the backtest
+— the better instrument for the question — was trustworthy again, and stated openly that this
+departed from a rule it had itself pre-registered. **That may well be the right call, and stating
+the departure openly is the right way to make it. But this is precisely the move pre-registration
+exists to prevent, and a deferred revert becomes a permanent keep by default.** Carry-forward: when
+a pre-registered criterion is set aside, the deferral needs a named condition and a named owner for
+closing it out, recorded where the next session will find it — not just a sentence in a chat.

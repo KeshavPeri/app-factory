@@ -413,3 +413,72 @@ both instances of this defect.
 constraint is derived from the finished ticket rather than drafted alongside it, and that a Builder
 finding a genuine contradiction should report it rather than pick a side. Both times the pipeline
 reported it correctly; both times the fault was upstream, at drafting.
+
+---
+
+## D11 — ClubElo is unreachable from every path this system has, and its own API can be down
+
+Writing an ingest ticket for `api.clubelo.com` (the source of `public.teams.elo`) on 2–3 Sept 2026
+required seeing one real response. Every path failed, for three different reasons:
+
+| Path | Result |
+|---|---|
+| Cloud container `curl` | `403 Host not in allowlist: api.clubelo.com` |
+| Device VM `device_bash` `curl` | `Connection blocked by network allowlist`, http 403 |
+| `WebFetch` | `ROBOTS_DISALLOWED` — robots.txt fetch itself timed out |
+| The human's own machine | **HTTP 502 from ClubElo's own IIS server**, on `/2026-09-02`, `/2026-09-01` and `/Arsenal` alike |
+
+`clubelo.com` (the site, not the API) responds — a 301 on `http://clubelo.com/` and a readable
+`/ENG` page — but that page served a **stale snapshot**: it listed West Ham, Leicester and Wolves in
+the top division and Burnley and Leeds in the second, i.e. roughly spring 2025, with an Arsenal
+rating 100 points below the one in our own database. **The site being up is not evidence the data
+is current.**
+
+**Two rules follow.**
+
+1. `api.clubelo.com` belongs on the App Factory environment's custom network allowlist (see D4) if
+   ClubElo ingest is ever going to be built or linted from inside a run. The ingest itself would run
+   in GitHub Actions, which has open network access — but nothing in the authoring or verification
+   path does.
+2. **Never substitute another provider's club Elo.** FootballDatabase, SinceAWin and others publish
+   club Elo ratings, but each uses its own K-factor, home-advantage constant and initialisation.
+   Mixing scales inside one column produces fixture difficulties that are silently wrong and look
+   entirely reasonable. A uniform in-scale estimate is the safer error, because it is the one you
+   know you made.
+
+---
+
+## D12 — Manual seeding of `public.teams.elo`, 3 Sept 2026
+
+Three promoted clubs (Ipswich, Hull, Coventry) had `elo = null` and had never held a rating,
+putting **15 of 50 horizon fixtures on the coarse FPL FDR fallback**, including fixtures inside the
+live GW3 recommendation. With ClubElo down (D11), all three were seeded by hand to **1650**:
+
+```
+update public.teams set elo = 1650, updated_at = now() where short_name in ('IPS','HUL','COV');
+```
+
+Preflight check 6 moved from 3/20 unrated and 15/50 fallback fixtures to **0/20 and 0/50**.
+
+**Placement reasoning, recorded so nobody later mistakes these for source data.** The rated floor
+was Sunderland at 1736 (promoted one season earlier, survived); Leeds, promoted the same year, sat
+at 1797; Arsenal topped at 2064. A newly promoted club is by construction weaker than the weakest
+survivor, so roughly 85 points below the floor. ClubElo's own stale snapshot independently showed
+Burnley and Leeds at 1638/1633 at their point of promotion, corroborating a 1630–1680 band.
+
+**All three received the same value deliberately.** With no data for any of them, inventing a
+30-point gap between Hull and Coventry would be fake precision that a future reader mistakes for a
+measurement. Uniform is the honest error.
+
+`elo_stale_since` was **left stamped**, so preflight keeps reporting these rows as stale — truthful,
+since they are placeholders. The value survives ingest because post-`#84`/`#176` a club whose CSV
+elo cell is blank now *keeps* its existing rating rather than having it nulled (the original `#63`
+rule was the opposite and caused the gap in the first place).
+
+Tier 2 decision — reversible with one statement:
+
+```
+update public.teams set elo = null, updated_at = now() where short_name in ('IPS','HUL','COV');
+```
+
+**Replace with real ratings the moment ClubElo returns.**
