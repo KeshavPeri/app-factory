@@ -572,3 +572,55 @@ the departure openly is the right way to make it. But this is precisely the move
 exists to prevent, and a deferred revert becomes a permanent keep by default.** Carry-forward: when
 a pre-registered criterion is set aside, the deferral needs a named condition and a named owner for
 closing it out, recorded where the next session will find it — not just a sentence in a chat.
+
+---
+
+## 20. A falsification gate is only as good as the instrument that can evaluate it — added 5 Sept 2026
+
+§17 established that the pipeline cannot catch a wrong diagnosis, only a wrong implementation, and
+prescribed the fix: a ticket whose premise is a causal claim about a measured number should carry a
+figure that must move if the diagnosis is right, and an instruction to **stop and report rather
+than merge** if it does not. That rule has now been applied properly and it still did not stop
+anything.
+
+**The instance.** Ticket #217 (shrink the recent minutes window toward the season share) carried an
+explicit, numeric, pre-registered gate: *"at five gameweeks, midfield must rise from 0.421 toward
+0.464 and forward from 0.442 toward 0.476. If neither moves materially, the diagnosis is wrong:
+stop, do not merge."* Backtest report 13 measured midfield at **0.426** and forward at **0.446** —
+moves of 0.005 and 0.004 against targets of 0.043 and 0.034, roughly an eighth of what the gate
+asked for. The ticket built, passed QA, and merged.
+
+**Nothing here failed to follow the process, and that is the finding.** The threshold was not
+vague. The check was not skipped, mis-specified, or run against the wrong data. It simply **could
+not be run before the merge decision existed.** The only instrument that computes that figure is
+`.github/workflows/backtest.yml`, which is `workflow_dispatch`-only by deliberate design — "a
+measurement job, not a scheduled one". No Builder session can trigger it, no QA step can read its
+report, and no Builder session has live Supabase credentials to compute the number itself. The
+Builder could see the *pre-change* figures the gate's thresholds were drawn from and had no way to
+produce the *post-change* figure the gate needed. The gate existed; nothing connected it to the
+merge.
+
+**This is the second occurrence.** §17's ticket 89 had the same shape — a correct check that shipped
+as a runtime assertion rather than a pre-merge stop, so a wrong fix merged cleanly and the nightly
+job simply began failing. Two instances of "a check existed, fired, and its result did not stop the
+thing it was meant to stop" is a pattern, and this one has an identifiable cause: **a falsification
+gate whose only instrument is a human-triggered, asynchronous GitHub Action can never run before a
+merge unless a human is deliberately made to run it first.**
+
+**Carry-forward — three options, none adopted here.**
+
+- **Make the gate a human step in the ticket, not a Builder step.** A ticket carrying a numeric gate
+  against a manual-dispatch report should not be eligible to leave `status:for-review` until that
+  report has been dispatched and read. That makes the owner the enforcer, which is where every other
+  irreversible decision in this pipeline already sits.
+- **Only write gates the Builder can actually evaluate.** If the figure needs live data the Builder
+  cannot reach, the ticket should say so and route the check to the post-merge human check instead
+  of dressing it as a stop-and-report the Builder is not equipped to honour.
+- **Give the measurement job a schedule.** If the backtest ran nightly rather than on demand, a
+  gate's figure would exist by morning without anyone remembering to ask for it.
+
+**The wider lesson for the "about the system" document.** The pipeline's gates are all
+implementable by an agent reading a diff: does the code compile, do the tests pass, does the scope
+constraint hold. A gate that asks "did this change move a number in the real world" is a different
+species, and the system currently has no place to put one. Naming that limit is more useful than
+adding a fourth gate the same architecture cannot enforce either.
