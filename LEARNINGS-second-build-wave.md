@@ -624,3 +624,58 @@ implementable by an agent reading a diff: does the code compile, do the tests pa
 constraint hold. A gate that asks "did this change move a number in the real world" is a different
 species, and the system currently has no place to put one. Naming that limit is more useful than
 adding a fourth gate the same architecture cannot enforce either.
+
+## 21. A gate that compares the new path against the old passes vacuously when the new path never runs — added 15 Sept 2026
+
+§20 recorded that a falsification gate is only as good as the instrument that can evaluate it.
+Ticket #229 found the sharper version of the same problem: a gate that *can* be evaluated, *is*
+evaluated, returns **PASS**, and proves nothing at all.
+
+**What happened.** #229 replaced the model's frozen ClubElo fixture term with a point-in-time
+team-strength construction. It shipped with two gate conditions, both of which I wrote:
+
+1. A named fixture (Man Utd v Man City) must come out below 0.5 under the new method.
+2. The point-in-time expectedScore's spread must not be lower than the frozen-elo spread.
+
+Run against live data for gameweek 5, the diagnostic reported **PASS** — and the fix had never
+executed once. Every one of the twenty rows resolved to the `stale-elo` tier, and the point-in-time
+column was byte-identical to the frozen-elo column.
+
+Condition 1 was NOT APPLICABLE: the script only examines the *next* gameweek, and the evidence
+fixture had already been played by the time the ticket landed. Condition 2 compared the new
+population against the old — and because the new path never activated, the two populations were
+the same numbers, so the standard deviations matched exactly (0.2150 vs 0.2150) and it passed.
+
+**Why the shape matters.** Both conditions were *relative*: they compared new against old. A
+relative comparison is satisfied perfectly by doing nothing. The gate had no condition asserting
+that the new code path was reached at all, so "changed nothing" and "changed things correctly and
+preserved the property" were indistinguishable to it.
+
+**The rule.** Every falsification gate on a change-of-behaviour ticket needs a **liveness
+condition** before any comparison condition: *the new path must demonstrably have executed.* Count
+the rows that took it. Assert the count is greater than zero. Only then compare.
+
+Corollaries, all of which #229 violated:
+
+- **Identical before/after columns are a FAILURE, not a pass.** If a ticket claims to change a
+  number and the number is unchanged everywhere, that is the strongest possible evidence the change
+  did not happen. Never let a spread, mean or variance comparison treat identity as success.
+- **A gate anchored to a dated example expires.** Condition 1 named a gameweek-4 fixture in a ticket
+  that merged during gameweek 5. Anchor gates to a property that holds at any time ("at least one
+  fixture uses the new source"), and keep the named example as a reported figure, not the gate.
+- **A NOT-APPLICABLE condition must not silently count toward a PASS.** #229's report said "Both
+  conditions satisfied (or not applicable)" and called it PASS. If the only substantive condition is
+  N/A, the honest verdict is INCONCLUSIVE, and the job should exit non-zero.
+- **The job that makes the change must report what it did.** `project-points.ts` had per-source
+  fixture counts in `job_runs.details` but printed nothing in its console summary, so a four-week
+  whole-season defect stayed invisible until someone hand-ran a separate diagnostic for an unrelated
+  reason.
+
+**The second-order finding.** The root cause was not in the fix at all. The upstream source file
+(`data/2026-2027/teams.csv`) publishes *two* blank columns — `elo` and `fotmob_name` — and each one
+silently disabled a different part of the model: the first froze every club rating at last season's
+value, the second left `opponent_team_code` null on every current-season row, which starved the
+replacement. One blank file, two whole-season defects, four gameweeks undetected, and preflight
+passed every night throughout. §18's observation that instrument defects outnumber model defects now
+holds for a third consecutive wave. **When a source file degrades, assume more than one column went
+with it, and check what each consumer does with a null.**
