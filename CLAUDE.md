@@ -103,3 +103,94 @@ token.
 Standing rules for writing tickets are in `MODEL-DIAGNOSIS-2026-09-24.md` §16 — research before you
 design, test before you ticket, check every premise at its source, offline-only Definition of Done,
 one scoreboard, no instrument-only tickets.
+
+## Standing rules for the orchestrator — binding from 24 Sept 2026
+
+Copied verbatim from `MODEL-DIAGNOSIS-2026-09-24.md` §16; section references (§1b, §7, §8, §11) point there.
+
+These exist because the project spent ~50 PRs going in circles (§2, §3). They apply to every future
+orchestrator session on this app and on the next one. Copy them into `app-factory/CLAUDE.md` so they
+survive beyond this file. If a rule gets in the way, say so to Keshav in one line and ask — do not
+quietly work around it.
+
+#### A. Before writing any ticket
+1. **Research before you design.** For any modelling or data question, first spend up to 30 minutes
+   finding how others already solve it (FPL Review docs, OpenFPL, public repos, papers). Name the
+   source in the ticket. If nobody does it this way, treat that as a warning, not an opportunity.
+2. **Test the idea before you ticket it.** Run it yourself in an interactive session on public CSVs
+   (template: `experiments/2026-09-24-gbm/`). Only ticket changes that already showed their gain
+   offline, and put that measured gain in the ticket. An untested idea is not a ticket.
+3. **Check the premise at its source.** Before a number goes into a ticket or a message, open the report
+   it came from and confirm exactly what is compared with what, on which rows. Quote file and line.
+   (§1a: "0.354 vs 0.345" was two model versions, not model vs naive.)
+4. **Ask the one question.** "Will this change what Keshav sees, or what gets recommended to him, within
+   two runs?" If the answer is no, don't write the ticket.
+5. **Know a metric's normal value before calling it a defect.** Compute what a decent model scores on it
+   (§1b: captain vs best-other-starter is about −5 per GW for any good model).
+
+#### B. Ticket shape
+6. **Every model ticket carries an offline gate** the Builder computes itself from public data before
+   marking the PR done: the metric, the reference number, the threshold, and "if missed: stop and
+   report, do not tune". No gate may depend on Supabase, a GitHub Action, or a human.
+7. **Liveness before comparison.** Every gate first checks the new code path actually ran (row count
+   > 0). Identical before/after numbers are a FAIL.
+8. **Definition of done is offline only.** Anything live goes in "Post-merge owner check (does not
+   block this PR)".
+9. **One scoreboard.** The §7 primary metric (5-GW Spearman, active players, zeros included) and the
+   captain/top-11 decision checks. Do not add, swap or redefine metrics without Keshav's explicit
+   approval. Never gate on 1-GW Spearman of players who featured.
+10. **File-disjoint and contract-disjoint.** Tickets in one batch must not edit the same file or change a
+    function another ticket in the batch imports. Freeze shared signatures in an earlier run.
+11. **Short tickets, short code.** Ticket bodies under ~80 lines. Code comments only where the reason
+    isn't obvious; decision logs under ~15 lines. No essays in source files.
+
+#### C. What not to write
+12. **No instrument-only tickets.** A report section, preflight check, diagnostic or coverage counter is
+    allowed only if it names the model or product ticket in the *next* run that it unblocks.
+13. **No data-substrate tickets for modelling.** History comes from vaastav + FPL-Core-Insights. No new
+    Supabase history tables.
+14. **No one-constant tickets.** Never a ticket whose whole change is one fitted constant, slope,
+    shrinkage K or multiplier.
+15. **Settled questions stay closed** unless there is new evidence from a *different* data source or a
+    *different* population: fixture-term tuning, conversion factors, shrinkage K, the minutes window,
+    the bonus exponent, the TypeScript learned model, penalty-duty treatments in baseline-v1.
+
+#### D. Budget and stop signals
+16. **Two strikes per idea.** An idea gets at most two runs. If it misses its gate twice, park it, write
+    two lines in `model/README.md`, and move on. No third attempt, no "instrument to find out why".
+17. **Run budget is 7** (§8). Any ticket not in the plan must say which planned item it replaces.
+    Adding runs beyond 7 needs Keshav's explicit yes.
+18. **Something visible every run from run 3 on.** At least one ticket per run must change what
+    Keshav sees or what gets recommended.
+19. **Progress check every 3 runs.** Send Keshav five lines: what he can do now that he couldn't before;
+    the primary metric now vs last check; runs used vs budget; what's next; anything blocked.
+    **If two runs in a row produced no user-visible change and no metric gain, stop writing tickets and
+    tell him plainly before doing anything else.**
+20. **Time-box surprises.** When a number moves unexpectedly, suspect the measurement first, but spend
+    at most one interactive hour on it. Never write a ticket just to investigate.
+21. **Scope is frozen to §11.** New feature ideas go on a parking list at the bottom of
+    `feature-list.md`, not into tickets, until the budget is spent.
+
+#### E. Reading results
+22. Compare baselines only on the same rows in the same run — never across reports.
+23. Fewer than ~10 settled gameweeks of live results is noise (the scorecard, captaincy). Don't act on
+    it unless the effect is huge and the cause is obvious.
+24. A metric that jumps after an unrelated change is a leak until proven otherwise (LEARNINGS §18).
+
+#### F. Talking to Keshav
+25. Lead with the answer. Plain, short English. Exact paste-ready commands, no trailing `#` comments.
+26. Every headline number states the comparison, the rows and the sample size ("model 0.59 vs naive
+    0.45, active players, 2025-26, 13,259 rows"). If unsure, say unsure.
+27. When a previous answer or a handoff was wrong, say so in one line and move on.
+28. Handoffs separate **measured** (with file and line) from **opinion**. Never pass on a headline you
+    haven't re-checked at its source.
+
+#### G. Checklist to answer in every ticket hand-over message (yes/no, one line each)
+- Researched how others do this, with a named source?
+- Tested offline, and the measured gain is written in the ticket?
+- Offline gate with reference number, threshold and stop rule?
+- Changes something Keshav sees or gets recommended within two runs?
+- File- and contract-disjoint from the rest of the batch?
+- Inside the 7-run budget, or replacing a named planned item?
+
+Any "no" means the ticket is not ready. Say which one, and why it should still go ahead, or drop it.
