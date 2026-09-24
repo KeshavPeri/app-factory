@@ -193,3 +193,37 @@ gh('/actions/runs?per_page=5')
 One line naming what you did and the issue links, then what he needs to decide. Example:
 "Run 1's three tickets are pushed and posted — #NNN, #NNN, #NNN. Label them `status:ready` when
 you're happy. One thing first: §9.1, the odds download."
+
+---
+
+## 8. Delegating to cheaper subagents
+
+Keshav runs low on session usage often. Use subagents (Haiku or Sonnet) where they genuinely save it.
+
+**The mechanism that saves tokens:** a subagent reads a lot and returns a little, so the large context
+never enters the main conversation and never persists into later turns. That is the whole benefit. It
+is real, but only for high-input, low-output, low-judgement work.
+
+**Delegate (Haiku is usually enough):**
+- Linting a draft ticket against the real code — "confirm these paths exist, these functions have
+  these signatures, and nothing else imports them."
+- Searching either repo for where something is defined or used.
+- Reading a long Action log, backtest report or scorecard and returning only the figures that matter.
+- Checking a proposed batch is file-disjoint and contract-disjoint.
+- Summarising a Builder's PR body.
+
+**Do not delegate — do it yourself:**
+- Writing or revising tickets.
+- Diagnosing a blocked Builder, a failed gate, or a number that looks wrong.
+- Deciding what goes into a batch, or whether to deviate from the plan.
+- Anything whose answer becomes a premise for the next decision. Rule A3 (check the premise at its
+  source) cannot be delegated — a summary is not a source.
+
+**Always paste the relevant gotchas into the subagent's brief.** A fresh cheap model does not know that
+`code` is the stable key and not `player_id`, that `team_goals_conceded` is the team figure and
+`goals_conceded` is a goalkeeper stat, that `player_gameweek_history.now_cost` is decimal millions
+while `players.now_cost` is integer tenths, or that `player_match_stats` must be filtered to
+`competition = 'prem'`. A vague brief gets a confident wrong answer, which is worse than no answer.
+
+**Verify anything load-bearing.** If a subagent's finding is going into a ticket or a gate, open the
+file yourself and confirm it.
