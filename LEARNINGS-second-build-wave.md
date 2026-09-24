@@ -679,3 +679,46 @@ replacement. One blank file, two whole-season defects, four gameweeks undetected
 passed every night throughout. §18's observation that instrument defects outnumber model defects now
 holds for a third consecutive wave. **When a source file degrades, assume more than one column went
 with it, and check what each consumer does with a null.**
+
+## 22. Three rules the project paid for the hard way — added 24 Sept 2026
+
+**22a. Check a number at its source before it becomes a premise.** Two headline figures steered weeks
+of work and both were wrong. "One-gameweek Spearman 0.354 against a naive baseline of 0.345" was
+comparing two *versions of the model* against each other, not the model against naive — the real naive
+1-GW figure is about 0.30. And "captaincy is −21 points over four gameweeks, the largest defect on the
+project" is roughly the **normal value** of that metric; a good model scores about −5 per gameweek on
+captain-versus-best-other-starter. Four tickets chased a symptom that was never abnormal. Before a
+number enters a ticket or a message, open the report it came from and confirm exactly what is compared
+with what, on which rows, and quote the file and line. And know a metric's normal value before calling
+it a defect.
+
+**22b. Experiments belong in interactive sessions, not in tickets.** Each model hypothesis was written
+as a ticket, built overnight, merged, and only then measured by the owner running a script. One
+hypothesis per night, with the answer arriving a day late and the Builder unable to see its own result.
+That loop is why ~50 PRs produced a model barely distinguishable from a naive baseline. Model
+development must happen on public CSVs the orchestrator can download and run *live in conversation* —
+test the idea, measure the gain, and only then write a ticket that carries the measured gain and an
+offline gate the Builder computes inside the PR. An untested idea is not a ticket.
+
+**22c. A Definition of Done must contain only what the Builder can actually do.** The pipeline's cloud
+sessions have no Supabase credentials and never will (`decisions/ticket-175.md`). Three separate
+tickets were blocked because "hand-run against live data" sat in the DoD. Split every ticket into
+`## Definition of done — offline only` (install, build, lint, tests, offline evaluation) and
+`## Post-merge owner check (does not block this PR)` marked explicitly "Not a gate." If a falsification
+gate's only instrument needs credentials, rewrite the gate as an offline computation on public data.
+Migrations are owner-only (Tier 1) and always belong in the post-merge section.
+
+**22d. The orchestrator owns GitHub from now on.** Keshav was hand-running every `git commit`, `git
+push` and `gh issue create`, which was most of his manual load and a steady source of dropped steps —
+tickets committed but never posted, issues posted twice, drafts out of sync with issue bodies. The
+orchestrator now does all of it via a PAT (`repo` + `workflow`) in `.env` and the GitHub REST API
+(`gh` is not installed in the device VM; `api.github.com` is reachable). It also triggers GitHub
+Actions directly, which removes most of the hand-run commands the owner was given for reports and
+tests.
+
+The useful distinction turned out not to be "who is allowed to do this" but "who has to type it".
+Applying `status:ready` and merging a PR are still the owner's decisions — the first spends an
+overnight run, the second is the last human checkpoint before code reaches live data, and this project
+has already merged dead code behind a green gate. But he should not have to run the commands. So those
+two are orchestrator-executed on an explicit instruction and never on its own initiative, while
+migrations, deletions and force-pushes stay off-limits entirely.

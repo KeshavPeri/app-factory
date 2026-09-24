@@ -71,3 +71,35 @@ Projects v2 by any path, proven by two probe runs; state is now `status:` labels
 Done = closed. Agent definitions, orchestrator prompt and escalation mirrors are at v0.3.
 Next: `GITHUB-SETUP-labels.md`, then Phase 5 step 8, then Phase 6 per `PHASE-6-RUNBOOK.md`.
 Do not start Phase 7 before that session writes `HANDOFF-phase-7.md`.
+
+---
+
+## Orchestrator responsibilities — added 24 Sept 2026
+
+The orchestrator session runs all routine GitHub and git work for this system. The owner does not
+hand-run `git commit`, `git push` or issue creation any more. See `ORCHESTRATOR-BRIEF.md` §7 for the
+exact mechanics and `LEARNINGS-second-build-wave.md` §22d for why.
+
+**Orchestrator does, unprompted:** pull/sync both repos; commit and push ticket drafts, learnings and
+docs; create and comment on issues; read issues, PRs, checks, branch state and Action logs; trigger
+GitHub Actions (`workflow_dispatch`) to run tests, backtests, preflight or the scheduled jobs, and read
+the results. Running an Action replaces most of the hand-run commands the owner used to be given.
+
+**Orchestrator does, but only on the owner's explicit instruction:** applying or removing
+`status:ready` (it dispatches an overnight build and spends his usage); merging a PR (the last human
+checkpoint before code reaches live data). One instruction away, not one command away — he should never
+have to type these, but he must always choose them.
+
+**Never the orchestrator:** applying a database migration (Tier 1 — hand over the SQL); deleting,
+force-pushing or rewriting history; pasting a reply to a blocked Builder (drafted by the orchestrator,
+pasted by the owner, because that channel resumes an existing agent).
+
+**Mechanics:** `gh` is not installed in the device VM and git has no stored credentials there, but
+`github.com` and `api.github.com` are reachable. Git identity is configured in both repos. A classic
+PAT with `repo` and `workflow` scopes lives in `fpl-advisor/.env` as `GITHUB_TOKEN`; push via
+`https://$GITHUB_TOKEN@github.com/...` and do everything else through the REST API. Never echo the
+token.
+
+Standing rules for writing tickets are in `MODEL-DIAGNOSIS-2026-09-24.md` §16 — research before you
+design, test before you ticket, check every premise at its source, offline-only Definition of Done,
+one scoreboard, no instrument-only tickets.

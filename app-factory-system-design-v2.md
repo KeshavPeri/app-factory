@@ -417,3 +417,24 @@ Execute the workplan phase by phase with the owner following along. Expect to:
 18. **Smoke test extended to exercise failure paths** (§10 Phase 6): empty-board exit and Tier-1 block, verified before real work. Costs one extra tiny run.
 19. **New risks logged** (§9): review decay, zombie cards, research-preview instability.
 20. **V1/Later ledger added** (§11) with explicit triggers for each Later item, replacing scattered "revisit later" notes.
+
+---
+
+## Addendum — orchestrator owns GitHub (24 Sept 2026)
+
+Originally the owner performed every git and GitHub action by hand: committing ticket drafts, pushing,
+and running `gh issue create` for each ticket. In practice this was the largest part of the owner's
+manual load and a recurring source of dropped or duplicated steps — drafts committed but never posted,
+issues posted twice, issue bodies drifting out of sync with the drafts on disk.
+
+From 24 Sept 2026 the orchestrator session performs these directly, using a `repo`-scoped PAT stored
+as `GITHUB_TOKEN` in `fpl-advisor/.env` and the GitHub REST API (`gh` is not installed in the device
+VM; `api.github.com` is reachable from it). Git identity is configured in both repos.
+
+The split is deliberate. The orchestrator automates what is mechanical and reversible. The owner keeps
+every action that either commits compute or cannot be undone: applying `status:ready`, which
+dispatches an overnight build; merging a PR; applying a database migration; and anything destructive.
+Replies to a blocked Builder are drafted by the orchestrator and pasted by the owner, because that
+channel resumes an existing agent rather than starting a new one.
+
+See `ORCHESTRATOR-BRIEF.md` §7 and `LEARNINGS-second-build-wave.md` §22d.
