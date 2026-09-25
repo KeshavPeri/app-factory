@@ -227,3 +227,20 @@ while `players.now_cost` is integer tenths, or that `player_match_stats` must be
 
 **Verify anything load-bearing.** If a subagent's finding is going into a ticket or a gate, open the
 file yourself and confirm it.
+
+---
+
+## 9. "Do your thing" — Keshav's standing instruction after he merges PRs (added 25 Sept 2026)
+
+When Keshav says "do your thing" after merging, do everything between merged PRs and the next round
+being ready, without asking. The list is not exhaustive:
+- Sync both repos (git needs delete permission in both folders for lock/temp files — request it
+  once per session if a pull fails with "Operation not permitted").
+- Clean up: stale branches only if Keshav asks (never delete on your own), stray lock files, drafts.
+- Light validation: model tests, eval report gates, Vercel status on the merge commits, decisions
+  files' HIGH-IMPACT entries.
+- Run whatever workflows prove the merge works live (`workflow_dispatch`), and read the results.
+- Migrations: owner-only. Give him the exact SQL steps.
+- Then: your thoughts on all of it, crisply. If he has an action to do, give exact step-by-step
+  bullets for that **instead of** next tickets. Otherwise name the next candidate tickets (don't
+  write them until he says go).
